@@ -3,14 +3,16 @@
 namespace App\Filament\Pages;
 
 use BackedEnum;
-use Filament\Pages\Page;
+use Filament\Pages\Dashboard;
 use Filament\Support\Icons\Heroicon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 use UnitEnum;
 
-class AssociationOverview extends Page
+class AssociationOverview extends Dashboard
 {
+    protected static string $routePath = '/';
+
     protected static ?string $slug = 'tong-quan-hoi';
 
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedChartBarSquare;

@@ -6,7 +6,7 @@
 
 @section('content')
 <section class="page-hero">
-    <div class="container mx-auto px-4 sm:px-6 lg:px-8"><span class="eyebrow">Khách hàng và đối tác</span><h1>Sự tin tưởng được xây dựng qua từng lần hợp tác</h1><p>Danh sách được sắp xếp theo lĩnh vực để người xem dễ đối chiếu với nhu cầu dự án của mình.</p></div>
+    <div class="container mx-auto px-4 sm:px-6 lg:px-8"><h1>Sự tin tưởng được xây dựng qua từng lần hợp tác</h1><p>Danh sách được sắp xếp theo lĩnh vực để người xem dễ đối chiếu với nhu cầu dự án của mình.</p></div>
 </section>
 
 <x-frontend.breadcrumb :items="[['label' => 'Trang chủ', 'url' => route('home')], ['label' => 'Khách hàng và đối tác']]" />
@@ -33,6 +33,6 @@
     </div>
 </section>
 
-<section class="section-space pt-0"><div class="container mx-auto px-4 sm:px-6 lg:px-8"><div class="conversion-panel"><div><span class="eyebrow">Hợp tác cùng THT Media</span><h2>Doanh nghiệp của anh/chị đang cần một đội ngũ triển khai truyền thông?</h2></div><a class="inline-flex min-h-12 items-center justify-center gap-2 rounded-full border border-transparent bg-primary px-5 py-3 text-sm font-bold leading-tight text-white shadow-sm transition duration-200 hover:-translate-y-px hover:bg-primary-hover hover:shadow-md focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary" href="{{ route('contact') }}">Trao đổi nhu cầu</a></div></div></section>
+<section class="section-space pt-0"><div class="container mx-auto px-4 sm:px-6 lg:px-8"><div class="conversion-panel"><div><h2>Doanh nghiệp của anh/chị đang cần một đội ngũ triển khai truyền thông?</h2></div><a class="inline-flex min-h-12 items-center justify-center gap-2 rounded-full border border-transparent bg-primary px-5 py-3 text-sm font-bold leading-tight text-white shadow-sm transition duration-200 hover:-translate-y-px hover:bg-primary-hover hover:shadow-md focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary" href="{{ route('contact') }}">Trao đổi nhu cầu</a></div></div></section>
 @endsection
 

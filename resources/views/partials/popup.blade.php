@@ -22,7 +22,7 @@
 
             <div class="tht-popup__body">
                 @if($popup->subtitle)
-                    <span class="tht-popup__eyebrow">{{ $popup->subtitle }}</span>
+
                 @endif
                 <h2 id="tht-popup-title-{{ $popup->id }}">{{ $popup->title }}</h2>
                 @if($popup->content)

@@ -7,14 +7,16 @@ use Database\Factories\UserFactory;
 use Filament\Models\Contracts\FilamentUser;
 use Filament\Panel;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Laravel\Sanctum\HasApiTokens;
 use Spatie\Permission\Traits\HasRoles;
 
 class User extends Authenticatable implements FilamentUser
 {
     /** @use HasFactory<UserFactory> */
-    use HasFactory, HasRoles, Notifiable;
+    use HasApiTokens, HasFactory, HasRoles, Notifiable;
 
     /**
      * Roles and permissions on this model belong to the admin panel guard.
@@ -52,6 +54,10 @@ class User extends Authenticatable implements FilamentUser
      */
     public function canAccessPanel(Panel $panel): bool
     {
+        if ($panel->getId() === 'member') {
+            return $this->is_active && $this->member()->where('status', 'approved')->exists();
+        }
+
         return $this->is_active
             && ($this->hasRole(['super_admin', 'admin'], 'admin') || $this->getAllPermissions()->isNotEmpty());
     }
@@ -78,5 +84,10 @@ class User extends Authenticatable implements FilamentUser
         return $this->getAllPermissions()->pluck('name')
             ->diff($actor->getAllPermissions()->pluck('name'))
             ->isEmpty();
+    }
+
+    public function member(): HasOne
+    {
+        return $this->hasOne(Member::class);
     }
 }

@@ -10,7 +10,7 @@
 @include('partials.frontend.structured-data', ['schema' => \App\Support\SchemaMarkup::webPage($pageName, $pageDescription, url()->current())])
 
 @section('content')
-    <section class="page-hero"><div class="container mx-auto px-4 sm:px-6 lg:px-8"><span class="eyebrow">Thông tin</span><h1>{{ $pageName }}</h1>@if($pageDescription)<p>{{ $pageDescription }}</p>@endif</div></section>
+    <section class="page-hero"><div class="container mx-auto px-4 sm:px-6 lg:px-8"><h1>{{ $pageName }}</h1>@if($pageDescription)<p>{{ $pageDescription }}</p>@endif</div></section>
     <x-frontend.breadcrumb :items="[['label' => 'Trang chủ', 'url' => route('home')], ['label' => $pageName]]" />
 
     <section class="section-space">

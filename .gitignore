@@ -15,6 +15,7 @@
 /public/storage
 /public/build
 /node_modules
+/.pnpm-store
 /storage/*.key
 /storage/pail
 /vendor

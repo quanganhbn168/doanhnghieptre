@@ -25,7 +25,7 @@
 @section('content')
     <section class="page-hero page-hero--portfolio">
         <div class="container mx-auto px-4 sm:px-6 lg:px-8">
-            <span class="eyebrow">Dự án đã thực hiện</span>
+
             <h1>Năng lực được chứng minh bằng công việc thực tế</h1>
             <p>Khám phá cách THT Media tiếp nhận yêu cầu, xây dựng giải pháp và triển khai từng dự án truyền thông.</p>
         </div>

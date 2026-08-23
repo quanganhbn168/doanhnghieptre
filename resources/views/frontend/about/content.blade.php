@@ -16,7 +16,7 @@
     <div class="container mx-auto px-4 sm:px-6 lg:px-8">
         <article class="w-full">
             <header class="mb-10">
-                <span class="eyebrow">{{ $companyContent->typeLabel() }}</span>
+
                 <h1 class="mt-3">{{ $contentTitle }}</h1>
                 @if($contentSummary)<p class="mt-4 text-lg text-muted">{{ $contentSummary }}</p>@endif
             </header>

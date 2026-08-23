@@ -49,7 +49,7 @@ class SettingService
         config(['app.timezone' => $settings->timezone]);
         config(['app.name' => $settings->site_name['vi'] ?? config('app.name')]);
         date_default_timezone_set($settings->timezone);
-        $this->syncMedia($data, ['logo', 'logo_footer', 'footer_background', 'favicon', 'watermark']);
+        $this->syncMedia($data, ['logo', 'logo_footer', 'footer_background', 'auth_background', 'favicon', 'watermark']);
         $this->siteChromeCache->forget();
     }
 
@@ -146,6 +146,8 @@ class SettingService
         $settings->homepage_sections = $data['homepage_sections'] ?? [];
         $settings->homepage_section_titles = $data['homepage_section_titles'] ?? [];
         $settings->homepage_stats = $data['homepage_stats'] ?? [];
+        $settings->homepage_member_benefit_title = $data['homepage_member_benefit_title'] ?? [];
+        $settings->homepage_member_benefits = $this->normalizeHomepageMemberBenefits($data['homepage_member_benefits'] ?? []);
         $settings->homepage_about_title = $data['homepage_about_title'] ?? [];
         $settings->homepage_about_text = $data['homepage_about_text'] ?? [];
         $settings->homepage_about_supporting_text = $data['homepage_about_supporting_text'] ?? [];
@@ -159,6 +161,20 @@ class SettingService
 
         $settings->save();
         $this->syncMedia($data, ['about_image']);
+    }
+
+    /** @return array<int, array{icon: string, title: string, description: string}> */
+    private function normalizeHomepageMemberBenefits(mixed $benefits): array
+    {
+        return collect(is_array($benefits) ? $benefits : [])
+            ->filter(fn (mixed $benefit): bool => is_array($benefit) && filled($benefit['title'] ?? null))
+            ->map(fn (array $benefit): array => [
+                'icon' => trim((string) ($benefit['icon'] ?? 'fa-solid fa-circle-check')),
+                'title' => trim((string) $benefit['title']),
+                'description' => trim((string) ($benefit['description'] ?? '')),
+            ])
+            ->values()
+            ->all();
     }
 
     public function updateAbout(array $data, AboutSettings $settings): void

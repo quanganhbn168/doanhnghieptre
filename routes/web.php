@@ -4,11 +4,24 @@ use App\Http\Controllers\Auth\AuthController;
 use App\Http\Controllers\Frontend;
 use Illuminate\Support\Facades\Route;
 
+Route::middleware('auth')->prefix('tai-khoan')->as('account.')->group(function (): void {
+    Route::get('/', \App\Http\Controllers\Account\DashboardController::class)->name('dashboard');
+    Route::get('/doanh-nghiep/dang-ky', [\App\Http\Controllers\Account\BusinessApplicationController::class, 'create'])->name('businesses.create');
+    Route::post('/doanh-nghiep', [\App\Http\Controllers\Account\BusinessApplicationController::class, 'store'])->middleware('throttle:frontend-forms')->name('businesses.store');
+    Route::get('/doanh-nghiep/{business}/chinh-sua', [\App\Http\Controllers\Account\BusinessApplicationController::class, 'edit'])->name('businesses.edit');
+    Route::patch('/doanh-nghiep/{business}', [\App\Http\Controllers\Account\BusinessApplicationController::class, 'update'])->middleware('throttle:frontend-forms')->name('businesses.update');
+});
+
 Route::get('/', [Frontend\HomeController::class, 'index'])->name('home');
 Route::get('/sitemap.xml', [Frontend\SeoController::class, 'sitemap'])->name('sitemap');
 Route::get('/robots.txt', [Frontend\SeoController::class, 'robots'])->name('robots');
-Route::get('/gioi-thieu', [Frontend\AboutController::class, 'index'])->name('about');
+Route::get('/gioi-thieu', [Frontend\AssociationPortalController::class, 'about'])->name('about');
 Route::get('/gioi-thieu/{slug}', [Frontend\CompanyContentController::class, 'show'])->name('about.content.show');
+Route::get('/doanh-nghiep', [Frontend\AssociationPortalController::class, 'businesses'])->name('businesses.index');
+Route::get('/danh-ba-doanh-nghiep', [Frontend\BusinessDirectoryController::class, 'index'])->name('directory.index');
+Route::get('/su-kien', [Frontend\AssociationPortalController::class, 'events'])->name('events.index');
+Route::post('/su-kien/{event}/dang-ky', [Frontend\EventRegistrationController::class, 'store'])->middleware('throttle:frontend-forms')->name('events.register');
+Route::get('/giao-thuong', [Frontend\AssociationPortalController::class, 'trade'])->name('trade.index');
 Route::get('/dich-vu', [Frontend\ServiceController::class, 'index'])->name('services.index');
 Route::get('/dich-vu/{slug}', [Frontend\ServiceController::class, 'resolve'])->name('services.show');
 Route::get('/du-an', [Frontend\ProjectController::class, 'index'])->name('projects.index');
@@ -22,8 +35,6 @@ Route::view('/chinh-sach-bao-mat', 'frontend.policies.privacy')->name('policies.
 Route::post('/lien-he', [Frontend\ContactController::class, 'submit'])->middleware('throttle:frontend-forms')->name('contact.submit');
 Route::post('/dang-ky-nhan-tin', [Frontend\NewsletterController::class, 'store'])->middleware('throttle:frontend-forms')->name('newsletter.store');
 Route::post('/binh-luan', [Frontend\CommentController::class, 'store'])->middleware('throttle:frontend-forms')->name('comments.store');
-
-Route::redirect('/login', '/admin/login')->name('login');
 
 Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 

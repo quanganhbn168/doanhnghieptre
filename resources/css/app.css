@@ -18,21 +18,22 @@
 @theme {
   --font-sans: "Roboto", Arial, sans-serif;
   --font-display: "Montserrat", Arial, sans-serif;
-  --color-primary: #247138;
-  --color-primary-hover: #1d5d2d;
-  --color-primary-soft: #eef7e8;
-  --color-secondary: #f68e1e;
-  --color-secondary-soft: #fff6e9;
-  --color-accent: #a4cf59;
-  --color-accent-light: #d8ff96;
-  --color-ink: #1f2b25;
-  --color-muted: #68756c;
-  --color-line: #e4ece2;
-  --color-canvas: #f7faf5;
+  --color-primary: #c21f2b;
+  --color-primary-hover: #8f1620;
+  --color-primary-soft: #fff1f2;
+  --color-secondary: #151515;
+  --color-secondary-soft: #f5f3f3;
+  --color-accent: #e15c65;
+  --color-accent-light: #ffe0e3;
+  --color-ink: #151515;
+  --color-muted: #6d6263;
+  --color-line: #eadbdd;
+  --color-canvas: #fdf9f9;
 }
 
 @import "../../public/assets/css/style.css";
 @import "../../public/assets/css/home.css";
+@import "../../public/assets/css/dnt.css";
 @import "../../public/assets/css/popup.css";
 @import "aos/dist/aos.css";
 

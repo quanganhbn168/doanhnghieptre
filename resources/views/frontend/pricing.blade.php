@@ -17,7 +17,7 @@
 <div class="page-shell pricing-page">
     <section class="page-hero">
         <div class="container mx-auto px-4 sm:px-6 lg:px-8">
-            <span class="eyebrow">Bảng giá</span>
+
             <h1>Chọn điểm bắt đầu cho kế hoạch truyền thông.</h1>
             <p>Phạm vi và ngân sách được chốt theo mục tiêu, bối cảnh và sản phẩm bàn giao thực tế.</p>
         </div>
@@ -30,7 +30,7 @@
             @forelse($pricingPlans as $plan)
                 <article id="pricing-plan-{{ $plan->id }}" class="pricing-plan-card {{ $plan->is_featured ? 'pricing-plan-card--featured' : '' }}">
                     <div class="pricing-plan-card__content">
-                        <span class="eyebrow">Gói {{ str_pad((string) $loop->iteration, 2, '0', STR_PAD_LEFT) }}</span>
+
                         <h2>{{ $plan->name }}</h2>
                         @if($plan->summary)<p>{{ $plan->summary }}</p>@endif
                         <ul>@foreach($plan->features ?? [] as $feature)<li>{{ $feature }}</li>@endforeach</ul>

@@ -1,20 +1,20 @@
 /* THT MEDIA VN public website */
 :root {
-  --primary-color: #247138;
-  --primary-rgb: 36 113 56;
-  --primary-hover-color: #1d5d2d;
-  --primary-soft-color: #eef7e8;
-  --secondary-color: #f68e1e;
-  --secondary-rgb: 246 142 30;
-  --secondary-soft-color: #fff6e9;
-  --accent-color: #a4cf59;
-  --accent-light-color: #d8ff96;
-  --dark-color: #1f2b25;
-  --ink-color: #1f2b25;
-  --muted-color: #68756c;
-  --line-color: #e4ece2;
+  --primary-color: #c21f2b;
+  --primary-rgb: 194 31 43;
+  --primary-hover-color: #8f1620;
+  --primary-soft-color: #fff1f2;
+  --secondary-color: #151515;
+  --secondary-rgb: 21 21 21;
+  --secondary-soft-color: #f5f3f3;
+  --accent-color: #e15c65;
+  --accent-light-color: #ffe0e3;
+  --dark-color: #151515;
+  --ink-color: #151515;
+  --muted-color: #6d6263;
+  --line-color: #eadbdd;
   --surface-color: #fff;
-  --canvas-color: #f7faf5;
+  --canvas-color: #fdf9f9;
   --border-color: var(--line-color);
   --light-color: var(--canvas-color);
   --tone-critical: #c92b43;
@@ -44,8 +44,8 @@
   --on-brand: var(--on-brand-color);
 }
 
-html { scroll-behavior: smooth; overflow-x: clip; font-size: 15px; }
-body { margin: 0; color: var(--ink-color); background: var(--surface-color); font-family: var(--font); font-size: 14px; line-height: 1.65; }
+html { scroll-behavior: smooth; overflow-x: clip; font-size: 16px; }
+body { margin: 0; color: var(--ink-color); background: var(--surface-color); font-family: var(--font); font-size: 16px; line-height: 1.65; }
 h1, h2, h3, h4, h5, h6, .section-heading-title { font-family: "Montserrat", Arial, sans-serif; }
 a { color: inherit; text-decoration: none; }
 img { max-width: 100%; }
@@ -640,8 +640,8 @@ img { max-width: 100%; }
   .sticky-panel { position: static; }
 }
 @media (max-width: 767.98px) {
-  html { font-size: 14px; }
-  body { font-size: 13.5px; }
+  html { font-size: 16px; }
+  body { font-size: 16px; }
   .pricing-plan-card { grid-template-columns: 1fr; gap: 24px; }
   .pricing-plan-card__aside { padding-top: 22px; padding-left: 0; border-top: 1px solid var(--line); border-left: 0; }
   .section-space { padding-block: 36px; }

@@ -14,7 +14,7 @@ class DatabaseSeeder extends Seeder
     {
         $seeders = [
             RoleAndPermissionSeeder::class,
-            ThtMediaFoundationSeeder::class,
+            DntFoundationSeeder::class,
         ];
 
         $seeders[] = app()->environment('testing')

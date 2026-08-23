@@ -42,6 +42,34 @@ if (typeof window !== 'undefined') {
       if (event.key === 'Escape') setMobileMenu(false);
     });
 
+    const eventRegistrationModal = document.querySelector('[data-event-registration-modal]');
+    const eventRegistrationForm = eventRegistrationModal?.querySelector('[data-event-registration-form]');
+    const eventRegistrationName = eventRegistrationModal?.querySelector('[data-event-registration-name]');
+    const setEventRegistrationModal = isOpen => {
+      if (!eventRegistrationModal) return;
+
+      eventRegistrationModal.classList.toggle('hidden', !isOpen);
+      eventRegistrationModal.classList.toggle('is-open', isOpen);
+      eventRegistrationModal.setAttribute('aria-hidden', String(!isOpen));
+      document.body.classList.toggle('overflow-hidden', isOpen);
+    };
+
+    document.querySelectorAll('[data-event-register-open]').forEach(button => {
+      button.addEventListener('click', () => {
+        if (!eventRegistrationForm) return;
+
+        eventRegistrationForm.action = eventRegistrationForm.dataset.eventRegistrationAction
+          ?.replace('__event__', encodeURIComponent(button.dataset.eventSlug || '')) || '';
+        if (eventRegistrationName) eventRegistrationName.textContent = button.dataset.eventName || '';
+        setEventRegistrationModal(true);
+        eventRegistrationForm.querySelector('[name="full_name"]')?.focus();
+      });
+    });
+
+    eventRegistrationModal?.querySelectorAll('[data-event-register-close]').forEach(button => {
+      button.addEventListener('click', () => setEventRegistrationModal(false));
+    });
+
     document.querySelectorAll('[data-mobile-collapse-toggle]').forEach(button => {
       button.addEventListener('click', () => {
         const target = document.getElementById(button.dataset.mobileCollapseToggle);

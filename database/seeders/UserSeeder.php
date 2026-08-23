@@ -28,7 +28,7 @@ class UserSeeder extends Seeder
 
         if ($superAdminRole) {
             $admin = User::query()->updateOrCreate(['email' => $email], [
-                'name' => trim((string) env('ADMIN_NAME', 'Quản trị THT MEDIA VN')),
+                'name' => trim((string) env('ADMIN_NAME', 'Quản trị DNT Bắc Ninh')),
                 'password' => Hash::make($password),
                 'email_verified_at' => now(),
                 'is_active' => true,

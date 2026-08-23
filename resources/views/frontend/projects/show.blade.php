@@ -67,14 +67,14 @@
                 <div class="lg:col-span-8">
                     @foreach ([['Bối cảnh và yêu cầu', $project->getTranslation('context', 'vi')], ['Giải pháp của THT Media', $project->getTranslation('solution', 'vi')]] as [$heading, $content])
                         @if ($content)
-                            <section class="case-section"><span class="eyebrow">{{ $heading }}</span>
+                            <section class="case-section">
                                 <div class="rich-content">{!! $content !!}</div>
                             </section>
                         @endif
                     @endforeach
 
                     @if ($workItems = $project->getTranslation('work_items', 'vi'))
-                        <section class="case-section"><span class="eyebrow">Hạng mục triển khai</span>
+                        <section class="case-section">
                             <ul class="check-list">
                                 @foreach ($workItems as $item)
                                     <li>{{ $item }}</li>
@@ -94,7 +94,7 @@
                         }
                     @endphp
                     @if ($galleryImages->isNotEmpty())
-                            <section class="case-section"><span class="eyebrow">Hình ảnh dự án</span>
+                            <section class="case-section">
                                 <div class="project-gallery">
                                     @foreach ($galleryImages as $image)
                                         <a class="glightbox" href="{{ $image['url'] }}"
@@ -106,7 +106,7 @@
                     @endif
 
                     @if ($project->video_url)
-                        <section class="case-section"><span class="eyebrow">Video dự án</span>
+                        <section class="case-section">
                             <div class="video-link-panel"><i class="fa-solid fa-circle-play"></i>
                                 <div>
                                     <h2>Xem video hoàn thiện</h2>
@@ -120,7 +120,7 @@
                     @endif
 
                     @if ($results = $project->getTranslation('results', 'vi'))
-                        <section class="case-section case-results"><span class="eyebrow">Kết quả bàn giao</span>
+                        <section class="case-section case-results">
                             <ul class="check-list">
                                 @foreach ($results as $result)
                                     <li>{{ $result }}</li>
@@ -131,7 +131,7 @@
                 </div>
                 <aside class="lg:col-span-4">
                     <div class="sticky-panel">
-                        <span class="eyebrow">Phạm vi dịch vụ</span>
+
                         <div class="stacked-links">
                             @foreach ($project->services as $service)
                                 <a href="{{ route('services.show', $service->slug) }}"><span>{{ $service->getTranslation('name', 'vi') }}</span><i
@@ -171,7 +171,7 @@
     <section class="section-space" id="project-consultation">
         <div class="container mx-auto px-4 sm:px-6 lg:px-8">
             <div class="consultation-panel">
-                <div class="consultation-panel__intro"><span class="eyebrow">Bắt đầu trao đổi</span>
+                <div class="consultation-panel__intro">
                     <h2>Cho chúng tôi biết mục tiêu dự án</h2>
                     <p>THT Media sẽ liên hệ để làm rõ phạm vi, cách triển khai và các đầu việc cần bàn giao.</p>
                 </div>

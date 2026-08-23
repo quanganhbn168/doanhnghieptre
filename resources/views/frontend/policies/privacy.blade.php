@@ -4,7 +4,7 @@
 @include('partials.frontend.structured-data', ['schema' => \App\Support\SchemaMarkup::webPage('Chính sách bảo mật', 'Chính sách bảo mật của THT Media VN.', route('policies.privacy'))])
 
 @section('content')
-<section class="page-hero"><div class="container mx-auto px-4 sm:px-6 lg:px-8"><span class="eyebrow">Chính sách</span><h1>Chính sách bảo mật</h1><p>Thông tin về cách THT Media tiếp nhận và sử dụng dữ liệu liên hệ.</p></div></section>
+<section class="page-hero"><div class="container mx-auto px-4 sm:px-6 lg:px-8"><h1>Chính sách bảo mật</h1><p>Thông tin về cách THT Media tiếp nhận và sử dụng dữ liệu liên hệ.</p></div></section>
 <x-frontend.breadcrumb :items="[['label' => 'Trang chủ', 'url' => route('home')], ['label' => 'Chính sách bảo mật']]" />
 <section class="section-space bg-soft">
     <div class="container mx-auto px-4 sm:px-6 lg:px-8"><article class="content-card policy-content mx-auto">

@@ -33,18 +33,19 @@ class AdminPanelProvider extends PanelProvider
             ->path('admin')
             ->login()
             ->authGuard('admin')
-            ->brandName('THT Media VN')
+            ->brandName('DNT Bắc Ninh')
             ->brandLogo(fn (): ?string => SiteAsset::current()->getFirstMediaUrl('logo') ?: null)
             ->brandLogoHeight('2.5rem')
             ->favicon(fn (): ?string => SiteAsset::current()->getFirstMediaUrl('favicon') ?: asset('favicon.ico'))
             ->colors([
-                'primary' => Color::Orange,
+                'primary' => Color::hex('#c21f2b'),
             ])
             ->viteTheme('resources/css/filament/admin/theme.css')
             ->navigationGroups([
                 NavigationGroup::make('Nội dung chính'),
                 NavigationGroup::make('Nội dung website'),
                 NavigationGroup::make('Nội dung trang chủ'),
+                NavigationGroup::make('Quản lý Hội'),
                 NavigationGroup::make('Khách hàng & liên hệ'),
                 NavigationGroup::make('SEO'),
                 NavigationGroup::make('Thư viện media'),

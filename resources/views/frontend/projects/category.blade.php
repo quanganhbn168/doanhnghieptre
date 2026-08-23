@@ -10,7 +10,7 @@
 @section('content')
 <section class="page-hero page-hero--portfolio">
     <div class="container mx-auto px-4 sm:px-6 lg:px-8">
-        <span class="eyebrow">Danh mục dự án</span>
+
         <h1>{{ $categoryName }}</h1>
         @if($categoryDescription)<p>{{ $categoryDescription }}</p>@endif
     </div>

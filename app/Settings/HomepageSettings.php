@@ -14,6 +14,10 @@ class HomepageSettings extends Settings
 
     public array $homepage_stats;
 
+    public array $homepage_member_benefit_title;
+
+    public array $homepage_member_benefits;
+
     public array $homepage_about_title;
 
     public array $homepage_about_text;

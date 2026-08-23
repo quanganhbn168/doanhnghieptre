@@ -18,7 +18,7 @@
 @include('partials.frontend.structured-data', ['schema' => \App\Support\SchemaMarkup::webPage($aboutPageLabel, $aboutPageIntro, route('about'))])
 
 @section('content')
-<section class="page-hero"><div class="container mx-auto px-4 sm:px-6 lg:px-8"><span class="eyebrow">{{ $aboutPageLabel }}</span><h1>{{ $aboutPageTitle }}</h1>@if($aboutPageIntro)<p>{{ $aboutPageIntro }}</p>@endif</div></section>
+<section class="page-hero"><div class="container mx-auto px-4 sm:px-6 lg:px-8"><h1>{{ $aboutPageTitle }}</h1>@if($aboutPageIntro)<p>{{ $aboutPageIntro }}</p>@endif</div></section>
 <x-frontend.breadcrumb :items="[['label' => 'Trang chủ', 'url' => route('home')], ['label' => $aboutPageLabel]]" />
 
 <section class="section-space">
@@ -54,7 +54,7 @@
                             @if($member->getFirstMediaUrl('company_image'))
                                 <img class="mb-5 aspect-[4/3] w-full rounded-xl object-cover" src="{{ $member->getFirstMediaUrl('company_image') }}" alt="{{ $member->getTranslation('title', 'vi') }}" loading="lazy">
                             @endif
-                            <span class="eyebrow">{{ sprintf('%02d', $loop->iteration) }}</span>
+
                             <h3 class="mt-3 text-lg font-bold"><a href="{{ route('about.content.show', ['slug' => $member->routeSlug('vi')]) }}">{{ $member->getTranslation('title', 'vi') }}</a></h3>
                             @if(filled($member->getTranslation('summary', 'vi')))<p class="mt-3 text-muted">{{ $member->getTranslation('summary', 'vi') }}</p>@endif
                         </article>
@@ -109,7 +109,7 @@
                             @if($article->getFirstMediaUrl('company_image'))
                                 <img class="mb-5 aspect-[16/10] w-full rounded-xl object-cover" src="{{ $article->getFirstMediaUrl('company_image') }}" alt="{{ $article->getTranslation('title', 'vi') }}" loading="lazy">
                             @endif
-                            <span class="eyebrow">Bài viết</span>
+
                             <h3 class="mt-3 text-lg font-bold"><a href="{{ route('about.content.show', ['slug' => $article->routeSlug('vi')]) }}">{{ $article->getTranslation('title', 'vi') }}</a></h3>
                             @if(filled($article->getTranslation('summary', 'vi')))<p class="mt-3 text-muted">{{ $article->getTranslation('summary', 'vi') }}</p>@endif
                         </article>
@@ -122,12 +122,12 @@
             <x-section-heading title="Ba nhóm năng lực triển khai" :href="route('services.index')" />
             <div class="grid gap-6 md:grid-cols-3">
                 @foreach(\App\Models\Service::GROUPS as $group => $label)
-                    <div><a class="content-card block h-full" href="{{ route('services.index', ['group' => $group]) }}"><span class="eyebrow">0{{ $loop->iteration }}</span><h3 class="text-base font-bold">{{ $label }}</h3><p class="text-muted">Xem phạm vi dịch vụ, đầu việc và sản phẩm bàn giao thuộc nhóm năng lực này.</p></a></div>
+                    <div><a class="content-card block h-full" href="{{ route('services.index', ['group' => $group]) }}"><h3 class="text-base font-bold">{{ $label }}</h3><p class="text-muted">Xem phạm vi dịch vụ, đầu việc và sản phẩm bàn giao thuộc nhóm năng lực này.</p></a></div>
                 @endforeach
             </div>
         </section>
     </div>
 </section>
 
-<section class="section-space pt-0"><div class="container mx-auto px-4 sm:px-6 lg:px-8"><div class="conversion-panel"><div><span class="eyebrow">Năng lực qua dự án thực tế</span><h2>Xem cách THT Media chuyển yêu cầu thành giải pháp triển khai</h2></div><div class="flex flex-wrap gap-2"><a class="inline-flex min-h-12 items-center justify-center gap-2 rounded-full border border-transparent bg-white px-5 py-3 text-sm font-bold leading-tight text-ink shadow-sm transition duration-200 hover:-translate-y-px hover:bg-primary-soft hover:text-primary hover:shadow-md focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white" href="{{ route('projects.index') }}">Xem dự án</a><a class="inline-flex min-h-12 items-center justify-center gap-2 rounded-full border border-transparent bg-primary px-5 py-3 text-sm font-bold leading-tight text-white shadow-sm transition duration-200 hover:-translate-y-px hover:bg-primary-hover hover:shadow-md focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary" href="{{ route('contact') }}">Nhận tư vấn</a></div></div></div></section>
+<section class="section-space pt-0"><div class="container mx-auto px-4 sm:px-6 lg:px-8"><div class="conversion-panel"><div><h2>Xem cách THT Media chuyển yêu cầu thành giải pháp triển khai</h2></div><div class="flex flex-wrap gap-2"><a class="inline-flex min-h-12 items-center justify-center gap-2 rounded-full border border-transparent bg-white px-5 py-3 text-sm font-bold leading-tight text-ink shadow-sm transition duration-200 hover:-translate-y-px hover:bg-primary-soft hover:text-primary hover:shadow-md focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white" href="{{ route('projects.index') }}">Xem dự án</a><a class="inline-flex min-h-12 items-center justify-center gap-2 rounded-full border border-transparent bg-primary px-5 py-3 text-sm font-bold leading-tight text-white shadow-sm transition duration-200 hover:-translate-y-px hover:bg-primary-hover hover:shadow-md focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary" href="{{ route('contact') }}">Nhận tư vấn</a></div></div></div></section>
 @endsection

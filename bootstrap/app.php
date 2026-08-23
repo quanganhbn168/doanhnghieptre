@@ -20,7 +20,7 @@ return Application::configure(basePath: dirname(__DIR__))
         });
         $middleware->redirectUsersTo(function () {
             if (Auth::check()) {
-                return route('filament.admin.pages.dashboard');
+                return route('account.dashboard');
             }
 
             return route('home');

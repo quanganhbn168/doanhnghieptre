@@ -4,26 +4,26 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="csrf-token" content="{{ csrf_token() }}">
-    <title>@yield('title', $website['seo_title'] ?? $website['name'] ?? config('app.name', 'Laravel'))</title>
-    <meta name="description" content="@yield('meta_description', $website['seo_description'] ?? $website['tagline'] ?? '')">
-    <meta name="keywords" content="@yield('meta_keywords', $website['seo_keywords'] ?? '')">
-    <meta name="author" content="{{ $website['company'] ?? $website['name'] ?? config('app.name', 'Laravel') }}">
+    <title>@yield('title', 'DNT Bắc Ninh | Hội Doanh nhân trẻ tỉnh Bắc Ninh')</title>
+    <meta name="description" content="@yield('meta_description', 'Nền tảng thông tin và kết nối của cộng đồng doanh nhân trẻ Bắc Ninh.')">
+    <meta name="keywords" content="@yield('meta_keywords', 'DNT Bắc Ninh, doanh nhân trẻ, doanh nghiệp, sự kiện, giao thương')">
+    <meta name="author" content="Hội Doanh nhân trẻ tỉnh Bắc Ninh">
     <meta name="robots" content="@yield('robots', 'index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1')">
     <link rel="canonical" href="@yield('canonical', url()->current())">
 
     <meta property="og:locale" content="{{ str_replace('-', '_', app()->getLocale()) }}">
     <meta property="og:type" content="@yield('og_type', 'website')">
-    <meta property="og:site_name" content="{{ $website['name'] ?? config('app.name', 'Laravel') }}">
-    <meta property="og:title" content="@yield('title', $website['seo_title'] ?? $website['name'] ?? config('app.name', 'Laravel'))">
-    <meta property="og:description" content="@yield('meta_description', $website['seo_description'] ?? $website['tagline'] ?? '')">
+    <meta property="og:site_name" content="DNT Bắc Ninh">
+    <meta property="og:title" content="@yield('title', 'DNT Bắc Ninh | Hội Doanh nhân trẻ tỉnh Bắc Ninh')">
+    <meta property="og:description" content="@yield('meta_description', 'Nền tảng thông tin và kết nối của cộng đồng doanh nhân trẻ Bắc Ninh.')">
     <meta property="og:url" content="@yield('canonical', url()->current())">
-    <meta property="og:image" content="@yield('seo_image', $siteAssets?->getFirstMediaUrl('seo_image') ?: $siteAssets?->getFirstMediaUrl('logo'))">
-    <meta property="og:image:alt" content="@yield('title', $website['seo_title'] ?? $website['name'] ?? config('app.name', 'Laravel'))">
+    <meta property="og:image" content="@yield('seo_image', asset('assets/images/dnt/association-hero.png'))">
+    <meta property="og:image:alt" content="@yield('title', 'DNT Bắc Ninh | Hội Doanh nhân trẻ tỉnh Bắc Ninh')">
 
     <meta name="twitter:card" content="summary_large_image">
-    <meta name="twitter:title" content="@yield('title', $website['seo_title'] ?? $website['name'] ?? config('app.name', 'Laravel'))">
-    <meta name="twitter:description" content="@yield('meta_description', $website['seo_description'] ?? $website['tagline'] ?? '')">
-    <meta name="twitter:image" content="@yield('seo_image', $siteAssets?->getFirstMediaUrl('seo_image') ?: $siteAssets?->getFirstMediaUrl('logo'))">
+    <meta name="twitter:title" content="@yield('title', 'DNT Bắc Ninh | Hội Doanh nhân trẻ tỉnh Bắc Ninh')">
+    <meta name="twitter:description" content="@yield('meta_description', 'Nền tảng thông tin và kết nối của cộng đồng doanh nhân trẻ Bắc Ninh.')">
+    <meta name="twitter:image" content="@yield('seo_image', asset('assets/images/dnt/association-hero.png'))">
 
     <link rel="icon" href="{{ $siteAssets?->getFirstMediaUrl('favicon') }}">
     <link rel="apple-touch-icon" href="{{ $siteAssets?->getFirstMediaUrl('favicon') }}">

@@ -6,7 +6,7 @@
 
 @section('content')
 <section class="page-hero">
-    <div class="container mx-auto px-4 sm:px-6 lg:px-8"><span class="eyebrow">Liên hệ</span><h1>Cùng làm rõ nhu cầu trước khi bắt đầu</h1><p>Chia sẻ mục tiêu, phạm vi và thời gian dự kiến. THT Media sẽ liên hệ để trao đổi hướng triển khai phù hợp.</p></div>
+    <div class="container mx-auto px-4 sm:px-6 lg:px-8"><h1>Cùng làm rõ nhu cầu trước khi bắt đầu</h1><p>Chia sẻ mục tiêu, phạm vi và thời gian dự kiến. THT Media sẽ liên hệ để trao đổi hướng triển khai phù hợp.</p></div>
 </section>
 
 <x-frontend.breadcrumb :items="[['label' => 'Trang chủ', 'url' => route('home')], ['label' => 'Liên hệ']]" />
@@ -38,7 +38,7 @@
             </div>
             <div class="lg:col-span-8">
                 <div class="content-card consultation-card">
-                    <span class="eyebrow">Thông tin dự án</span>
+
                     <h2>Chúng tôi có thể hỗ trợ gì?</h2>
                     <p class="text-muted">Các trường về ngân sách và thời gian giúp đội ngũ chuẩn bị cuộc trao đổi sát hơn; anh/chị có thể để trống nếu chưa xác định.</p>
                     @if(session('success'))<div class="ui-alert ui-alert--success">{{ session('success') }}</div>@endif
@@ -49,7 +49,7 @@
             @if(! empty($website['branches'] ?? []))
                 <div class="lg:col-span-12">
                     <div class="content-card">
-                        <span class="eyebrow">Hệ thống cơ sở</span>
+
                         <h2>Chi nhánh</h2>
                         <div class="grid gap-6 md:grid-cols-2">
                             @foreach($website['branches'] as $branch)

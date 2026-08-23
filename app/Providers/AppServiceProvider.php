@@ -54,7 +54,7 @@ class AppServiceProvider extends ServiceProvider
             $view->with('website', app(WebsiteSettingsService::class)->all());
         });
 
-        View::composer('layouts.master', function ($view): void {
+        View::composer(['layouts.master', 'layouts.auth'], function ($view): void {
             $aboutSettings = null;
             $homepageSettings = null;
             $seoSettings = null;

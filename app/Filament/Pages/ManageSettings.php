@@ -78,6 +78,7 @@ class ManageSettings extends Page
             'logo' => $this->currentMediaPath('logo'),
             'logo_footer' => $this->currentMediaPath('logo_footer'),
             'footer_background' => $this->currentMediaPath('footer_background'),
+            'auth_background' => $this->currentMediaPath('auth_background'),
             'favicon' => $this->currentMediaPath('favicon'),
             'watermark' => $this->currentMediaPath('watermark'),
             'header_menu_id' => $website->header_menu_id,
@@ -92,6 +93,8 @@ class ManageSettings extends Page
             'homepage_sections' => $homepage->homepage_sections,
             'homepage_section_titles' => $homepage->homepage_section_titles,
             'homepage_stats' => $homepage->homepage_stats,
+            'homepage_member_benefit_title' => $homepage->homepage_member_benefit_title,
+            'homepage_member_benefits' => $homepage->homepage_member_benefits,
             'homepage_about_title' => $homepage->homepage_about_title,
             'homepage_about_text' => $homepage->homepage_about_text,
             'homepage_about_supporting_text' => $homepage->homepage_about_supporting_text,
@@ -272,12 +275,15 @@ class ManageSettings extends Page
                     $this->identityUpload('footer_background', 'Ảnh nền footer', [
                         'image/jpeg', 'image/png', 'image/webp',
                     ]),
+                    $this->identityUpload('auth_background', 'Ảnh nền đăng nhập / đăng ký', [
+                        'image/jpeg', 'image/png', 'image/webp',
+                    ]),
                     $this->identityUpload('favicon', 'Favicon', [
                         'image/png', 'image/jpeg', 'image/webp', 'image/svg+xml',
                         'image/x-icon', 'image/vnd.microsoft.icon',
                     ]),
                 ])
-                ->columns(4),
+                ->columns(5),
             Section::make('Menu frontend')
                 ->icon(Heroicon::OutlinedBars3)
                 ->description('Để trống thì frontend dùng menu fallback theo giao diện hiện tại.')
@@ -430,6 +436,49 @@ class ManageSettings extends Page
                         ->columnSpanFull()
                         ->addActionLabel('Thêm con số')
                         ->reorderable(),
+                ])
+                ->columns(1),
+            Section::make('Lợi ích dành cho hội viên')
+                ->icon(Heroicon::OutlinedSparkles)
+                ->description('Sáu thẻ quyền lợi xuất hiện ngay dưới phần giới thiệu trên trang chủ.')
+                ->schema([
+                    TextInput::make('homepage_member_benefit_title.vi')
+                        ->label('Tiêu đề khối')
+                        ->required()
+                        ->maxLength(255)
+                        ->columnSpanFull(),
+                    Repeater::make('homepage_member_benefits')
+                        ->label('Danh sách quyền lợi')
+                        ->schema([
+                            TextInput::make('title')
+                                ->label('Tiêu đề')
+                                ->required()
+                                ->maxLength(120),
+                            Textarea::make('description')
+                                ->label('Mô tả')
+                                ->required()
+                                ->rows(3),
+                            Select::make('icon')
+                                ->label('Biểu tượng')
+                                ->options([
+                                    'fa-solid fa-people-group' => 'Mạng lưới doanh nhân',
+                                    'fa-solid fa-tower-broadcast' => 'Truyền thông thương hiệu',
+                                    'fa-solid fa-graduation-cap' => 'Đào tạo',
+                                    'fa-solid fa-calendar-days' => 'Sự kiện',
+                                    'fa-solid fa-chart-line' => 'Giao thương',
+                                    'fa-solid fa-hand-holding-heart' => 'Hỗ trợ doanh nghiệp',
+                                    'fa-solid fa-handshake' => 'Hợp tác',
+                                    'fa-solid fa-circle-check' => 'Quyền lợi khác',
+                                ])
+                                ->required(),
+                        ])
+                        ->columns(3)
+                        ->minItems(1)
+                        ->maxItems(6)
+                        ->defaultItems(0)
+                        ->addActionLabel('Thêm quyền lợi')
+                        ->reorderable()
+                        ->columnSpanFull(),
                 ])
                 ->columns(1),
             Section::make('Vì sao chọn chúng tôi')

@@ -22,6 +22,7 @@ Route::get('/danh-ba-doanh-nghiep', [Frontend\BusinessDirectoryController::class
 Route::get('/su-kien', [Frontend\AssociationPortalController::class, 'events'])->name('events.index');
 Route::post('/su-kien/{event}/dang-ky', [Frontend\EventRegistrationController::class, 'store'])->middleware('throttle:frontend-forms')->name('events.register');
 Route::get('/giao-thuong', [Frontend\AssociationPortalController::class, 'trade'])->name('trade.index');
+Route::get('/giao-thuong/{slug}', [Frontend\AssociationPortalController::class, 'tradeShow'])->name('trade.show');
 Route::get('/dich-vu', [Frontend\ServiceController::class, 'index'])->name('services.index');
 Route::get('/dich-vu/{slug}', [Frontend\ServiceController::class, 'resolve'])->name('services.show');
 Route::get('/du-an', [Frontend\ProjectController::class, 'index'])->name('projects.index');

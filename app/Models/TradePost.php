@@ -11,6 +11,12 @@ class TradePost extends Model
 {
     use SoftDeletes;
 
+    public const TYPE_OPTIONS = [
+        'buy' => 'Cần mua',
+        'sell' => 'Cần bán',
+        'cooperate' => 'Mời hợp tác',
+    ];
+
     protected $guarded = [];
 
     protected function casts(): array
@@ -35,5 +41,19 @@ class TradePost extends Model
     public function industries(): BelongsToMany
     {
         return $this->belongsToMany(Industry::class, 'trade_post_industries')->withTimestamps();
+    }
+
+    public static function typeLabel(?string $type): string
+    {
+        return self::TYPE_OPTIONS[$type] ?? 'Khác';
+    }
+
+    public static function typeIcon(?string $type): string
+    {
+        return match ($type) {
+            'sell' => 'fa-cart-shopping',
+            'cooperate' => 'fa-handshake',
+            default => 'fa-magnifying-glass',
+        };
     }
 }

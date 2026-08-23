@@ -3,7 +3,9 @@
 namespace App\Http\Controllers\Frontend;
 
 use App\Http\Controllers\Controller;
+use App\Models\TradePost;
 use App\Services\AssociationHomeService;
+use Illuminate\Http\Request;
 use Illuminate\View\View;
 
 class AssociationPortalController extends Controller
@@ -35,14 +37,32 @@ class AssociationPortalController extends Controller
         ]);
     }
 
-    public function trade(AssociationHomeService $associationHome): View
+    public function trade(Request $request, AssociationHomeService $associationHome): View
     {
+        $filters = $request->validate([
+            'type' => ['nullable', 'string', 'in:'.implode(',', array_keys(TradePost::TYPE_OPTIONS))],
+        ]);
+
         return view('frontend.association.index', [
             'pageTitle' => 'Giao thương',
             'pageLead' => 'Cơ hội mua bán, hợp tác và kết nối nhu cầu giữa các doanh nghiệp.',
             'pageIcon' => 'fa-handshake',
             'itemType' => 'trade',
-            'items' => $associationHome->tradePosts(24),
+            'items' => $associationHome->tradePosts(24, $filters['type'] ?? null),
+            'tradeTypes' => TradePost::TYPE_OPTIONS,
+            'activeTradeType' => $filters['type'] ?? null,
         ]);
+    }
+
+    public function tradeShow(string $slug): View
+    {
+        $tradePost = TradePost::query()
+            ->with(['business', 'member', 'industries'])
+            ->where('slug', $slug)
+            ->where('status', 'approved')
+            ->where(fn ($query) => $query->whereNull('expires_at')->orWhere('expires_at', '>=', now()))
+            ->firstOrFail();
+
+        return view('frontend.association.trade-detail', compact('tradePost'));
     }
 }

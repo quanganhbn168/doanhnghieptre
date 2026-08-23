@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Models\TradePost;
 use App\Settings\HomepageSettings;
 use Carbon\Carbon;
 use Illuminate\Support\Collection;
@@ -194,13 +195,13 @@ class AssociationHomeService
             ->map(fn (object $event): object => $this->presentEvent($event));
     }
 
-    public function tradePosts(int $limit = 24): Collection
+    public function tradePosts(int $limit = 24, ?string $type = null): Collection
     {
         if (! Schema::hasTable('trade_posts')) {
             return collect();
         }
 
-        return DB::table('trade_posts')
+        $query = DB::table('trade_posts')
             ->leftJoin('businesses', 'trade_posts.business_id', '=', 'businesses.id')
             ->where('trade_posts.status', 'approved')
             ->where(function ($query): void {
@@ -218,11 +219,23 @@ class AssociationHomeService
                 'trade_posts.approved_at',
                 'businesses.name as business_name',
                 DB::raw('null as cover_url'),
-            ])
+            ]);
+
+        if (array_key_exists($type, TradePost::TYPE_OPTIONS)) {
+            $query->where('trade_posts.type', $type);
+        }
+
+        return $query
             ->orderByDesc('trade_posts.approved_at')
             ->orderByDesc('trade_posts.id')
             ->limit($limit)
-            ->get();
+            ->get()
+            ->map(function (object $tradePost): object {
+                $tradePost->type_label = TradePost::typeLabel($tradePost->type);
+                $tradePost->type_icon = TradePost::typeIcon($tradePost->type);
+
+                return $tradePost;
+            });
     }
 
     private function presentEvent(object $event): object

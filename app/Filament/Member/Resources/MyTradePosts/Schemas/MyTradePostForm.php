@@ -3,6 +3,7 @@
 namespace App\Filament\Member\Resources\MyTradePosts\Schemas;
 
 use App\Models\Business;
+use App\Models\TradePost;
 use Filament\Forms\Components\DateTimePicker;
 use Filament\Forms\Components\RichEditor;
 use Filament\Forms\Components\Select;
@@ -29,11 +30,7 @@ class MyTradePostForm
                             ->all())
                         ->required()
                         ->searchable(),
-                    Select::make('type')->label('Loại cơ hội')->options([
-                        'request' => 'Tìm đối tác / nhu cầu hợp tác',
-                        'offer' => 'Giới thiệu năng lực / sản phẩm',
-                        'collaborate' => 'Mời hợp tác',
-                    ])->required(),
+                    Select::make('type')->label('Loại cơ hội')->options(TradePost::TYPE_OPTIONS)->required(),
                     TextInput::make('title')->label('Tiêu đề')->required()->maxLength(255)->columnSpanFull(),
                     Textarea::make('summary')->label('Tóm tắt')->required()->rows(3)->columnSpanFull(),
                     RichEditor::make('content')->label('Nội dung chi tiết')->columnSpanFull(),

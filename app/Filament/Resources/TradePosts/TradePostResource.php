@@ -46,9 +46,7 @@ class TradePostResource extends Resource
                 ->schema([
                     Select::make('member_id')->label('Hội viên đăng tin')->relationship('member', 'full_name')->searchable()->preload()->required(),
                     Select::make('business_id')->label('Doanh nghiệp')->relationship('business', 'name')->searchable()->preload(),
-                    Select::make('type')->label('Loại cơ hội')->options([
-                        'request' => 'Tìm đối tác / nhu cầu hợp tác', 'offer' => 'Giới thiệu năng lực / sản phẩm', 'collaborate' => 'Mời hợp tác',
-                    ])->required(),
+                    Select::make('type')->label('Loại cơ hội')->options(TradePost::TYPE_OPTIONS)->required(),
                     TextInput::make('title')->label('Tiêu đề')->required()->maxLength(255)->columnSpanFull(),
                     Textarea::make('summary')->label('Tóm tắt')->rows(3)->columnSpanFull(),
                     RichEditor::make('content')->label('Nội dung chi tiết')->columnSpanFull(),
@@ -75,9 +73,7 @@ class TradePostResource extends Resource
                 TextColumn::make('title')->label('Cơ hội')->searchable()->sortable()->limit(55),
                 TextColumn::make('member.full_name')->label('Hội viên')->placeholder('—')->searchable(),
                 TextColumn::make('business.name')->label('Doanh nghiệp')->placeholder('—')->toggleable(),
-                TextColumn::make('type')->label('Loại')->formatStateUsing(fn (?string $state): string => [
-                    'request' => 'Tìm đối tác', 'offer' => 'Giới thiệu năng lực', 'collaborate' => 'Mời hợp tác',
-                ][$state] ?? '—'),
+                TextColumn::make('type')->label('Loại')->formatStateUsing(TradePost::typeLabel(...))->badge(),
                 TextColumn::make('status')->label('Trạng thái')->badge()->color(fn (string $state): string => match ($state) {
                     'approved' => 'success', 'pending' => 'warning', 'rejected' => 'danger', default => 'gray',
                 }),
@@ -85,6 +81,7 @@ class TradePostResource extends Resource
             ])
             ->defaultSort('updated_at', 'desc')
             ->filters([
+                SelectFilter::make('type')->label('Loại cơ hội')->options(TradePost::TYPE_OPTIONS),
                 SelectFilter::make('status')->label('Trạng thái')->options([
                     'draft' => 'Bản nháp', 'pending' => 'Chờ duyệt', 'approved' => 'Đã duyệt', 'rejected' => 'Yêu cầu bổ sung', 'closed' => 'Đã đóng',
                 ]),
@@ -97,7 +94,7 @@ class TradePostResource extends Resource
                     ->visible(fn (TradePost $record): bool => in_array($record->status, ['draft', 'rejected'], true))
                     ->requiresConfirmation()
                     ->action(fn (TradePost $record): bool => $record->update([
-                        'status' => 'pending', 'review_note' => null, 'reviewed_by' => auth()->id(),
+                        'status' => 'pending', 'review_note' => null, 'reviewed_by' => auth('admin')->id(),
                     ])),
                 Action::make('approve')
                     ->label('Duyệt')
@@ -106,7 +103,7 @@ class TradePostResource extends Resource
                     ->visible(fn (TradePost $record): bool => $record->status === 'pending')
                     ->requiresConfirmation()
                     ->action(fn (TradePost $record): bool => $record->update([
-                        'status' => 'approved', 'review_note' => null, 'approved_at' => now(), 'reviewed_by' => auth()->id(),
+                        'status' => 'approved', 'review_note' => null, 'approved_at' => now(), 'closed_at' => null, 'reviewed_by' => auth('admin')->id(),
                     ])),
                 Action::make('reject')
                     ->label('Yêu cầu bổ sung')
@@ -117,7 +114,25 @@ class TradePostResource extends Resource
                         Textarea::make('review_note')->label('Nội dung cần bổ sung')->required()->rows(4),
                     ])
                     ->action(fn (TradePost $record, array $data): bool => $record->update([
-                        'status' => 'rejected', 'review_note' => $data['review_note'], 'approved_at' => null, 'reviewed_by' => auth()->id(),
+                        'status' => 'rejected', 'review_note' => $data['review_note'], 'approved_at' => null, 'reviewed_by' => auth('admin')->id(),
+                    ])),
+                Action::make('close')
+                    ->label('Đóng cơ hội')
+                    ->icon('heroicon-o-no-symbol')
+                    ->color('gray')
+                    ->visible(fn (TradePost $record): bool => $record->status === 'approved')
+                    ->requiresConfirmation()
+                    ->action(fn (TradePost $record): bool => $record->update([
+                        'status' => 'closed', 'closed_at' => now(), 'reviewed_by' => auth('admin')->id(),
+                    ])),
+                Action::make('reopen')
+                    ->label('Mở lại')
+                    ->icon('heroicon-o-arrow-path')
+                    ->color('success')
+                    ->visible(fn (TradePost $record): bool => $record->status === 'closed' && (! $record->expires_at || $record->expires_at->isFuture()))
+                    ->requiresConfirmation()
+                    ->action(fn (TradePost $record): bool => $record->update([
+                        'status' => 'approved', 'closed_at' => null, 'approved_at' => now(), 'reviewed_by' => auth('admin')->id(),
                     ])),
                 EditAction::make(),
                 DeleteAction::make(),

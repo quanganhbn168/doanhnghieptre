@@ -52,9 +52,15 @@ class BusinessDirectoryController extends Controller
             return new LengthAwarePaginator([], 0, 12);
         }
 
+        $industryNames = DB::table('business_industries')
+            ->join('industries', 'industries.id', '=', 'business_industries.industry_id')
+            ->selectRaw('business_industries.business_id, GROUP_CONCAT(DISTINCT industries.name ORDER BY business_industries.is_primary DESC, industries.sort_order, industries.name SEPARATOR " · ") as industry_names')
+            ->groupBy('business_industries.business_id');
+
         $query = DB::table('businesses')
             ->leftJoin('business_categories', 'businesses.business_category_id', '=', 'business_categories.id')
             ->leftJoin('business_chapters', 'businesses.business_chapter_id', '=', 'business_chapters.id')
+            ->leftJoinSub($industryNames, 'business_industry_names', fn ($join) => $join->on('business_industry_names.business_id', '=', 'businesses.id'))
             ->leftJoin('media as business_logos', function ($join): void {
                 $join->on('business_logos.model_id', '=', 'businesses.id')
                     ->where('business_logos.model_type', '=', 'App\\Models\\Business')
@@ -74,6 +80,7 @@ class BusinessDirectoryController extends Controller
                 'businesses.business_size',
                 'business_categories.name as category_name',
                 'business_chapters.name as chapter_name',
+                'business_industry_names.industry_names',
                 'business_logos.id as logo_media_id',
                 'business_logos.file_name as logo_file_name',
                 'business_logos.disk as logo_disk',

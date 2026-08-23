@@ -43,11 +43,7 @@ class BusinessApplicationController extends Controller
                 'status' => 'draft',
             ]);
 
-            if (filled($data['industry_id'] ?? null)) {
-                $business->industries()->sync([
-                    $data['industry_id'] => ['is_primary' => true],
-                ]);
-            }
+            $this->syncIndustries($business, $data['industry_ids']);
 
             if ($user->member) {
                 $business->members()->syncWithoutDetaching([
@@ -93,13 +89,7 @@ class BusinessApplicationController extends Controller
         DB::transaction(function () use ($business, $data, $request): void {
             $business->update($this->payload($data));
 
-            if (filled($data['industry_id'] ?? null)) {
-                $business->industries()->sync([
-                    $data['industry_id'] => ['is_primary' => true],
-                ]);
-            } else {
-                $business->industries()->detach();
-            }
+            $this->syncIndustries($business, $data['industry_ids']);
 
             $business->transitionTo('pending', $request->user()->id, 'Hồ sơ được bổ sung và gửi lại để duyệt.');
         });
@@ -128,7 +118,8 @@ class BusinessApplicationController extends Controller
             'business_type' => ['required', Rule::in(['limited', 'joint_stock', 'private', 'household', 'cooperative', 'other'])],
             'business_size' => ['required', Rule::in(['small', 'medium', 'large'])],
             'business_category_id' => ['nullable', Rule::exists('business_categories', 'id')->where('is_active', true)],
-            'industry_id' => ['nullable', Rule::exists('industries', 'id')->where('is_active', true)],
+            'industry_ids' => ['required', 'array', 'min:1', 'max:5'],
+            'industry_ids.*' => ['required', 'integer', 'distinct', Rule::exists('industries', 'id')->where('is_active', true)],
             'phone' => ['required', 'string', 'max:30'],
             'email' => ['required', 'email', 'max:255'],
             'website' => ['nullable', 'url', 'max:2048'],
@@ -141,6 +132,9 @@ class BusinessApplicationController extends Controller
             'confirm_information' => ['accepted'],
         ], [
             'confirm_information.accepted' => 'Anh/chị cần xác nhận thông tin đã khai là chính xác.',
+            'industry_ids.required' => 'Anh/chị cần chọn ít nhất một lĩnh vực hoạt động.',
+            'industry_ids.min' => 'Anh/chị cần chọn ít nhất một lĩnh vực hoạt động.',
+            'industry_ids.max' => 'Mỗi doanh nghiệp chỉ được chọn tối đa 5 lĩnh vực hoạt động.',
         ]);
     }
 
@@ -162,6 +156,20 @@ class BusinessApplicationController extends Controller
             'summary' => $data['summary'],
             'representative_job_title' => ($data['job_title'] ?? null) ?: null,
         ];
+    }
+
+    /** @param array<int, int|string> $industryIds */
+    private function syncIndustries(Business $business, array $industryIds): void
+    {
+        $ids = array_values(array_unique(array_map('intval', $industryIds)));
+
+        abort_if(count($ids) > 5, 422, 'Mỗi doanh nghiệp được chọn tối đa 5 lĩnh vực hoạt động.');
+
+        $business->industries()->sync(
+            collect($ids)->mapWithKeys(fn (int $id, int $index): array => [
+                $id => ['is_primary' => $index === 0],
+            ])->all(),
+        );
     }
 
     private function syncLogo(Request $request, Business $business): void

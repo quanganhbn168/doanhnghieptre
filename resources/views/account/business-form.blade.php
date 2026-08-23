@@ -7,7 +7,9 @@
 @section('content')
     @php
         $isEditing = $mode === 'edit';
-        $selectedIndustryId = old('industry_id', $business->industries->first()?->id);
+        $selectedIndustryIds = collect(old('industry_ids', $business->industries->modelKeys()))
+            ->map(static fn ($id): string => (string) $id)
+            ->all();
     @endphp
     <div class="dnt-application-page">
         <div class="container mx-auto px-4 sm:px-6 lg:px-8">
@@ -36,7 +38,7 @@
                     <h2>Lĩnh vực và quy mô</h2>
                     <div class="dnt-business-application__grid">
                         <label>Nhóm doanh nghiệp<select class="ui-select" name="business_category_id"><option value="">Chọn nhóm</option>@foreach($categories as $category)<option value="{{ $category->id }}" @selected((string) old('business_category_id', $business->business_category_id) === (string) $category->id)>{{ $category->name }}</option>@endforeach</select></label>
-                        <label>Lĩnh vực hoạt động chính<select class="ui-select" name="industry_id"><option value="">Chọn lĩnh vực</option>@foreach($industries as $industry)<option value="{{ $industry->id }}" @selected((string) $selectedIndustryId === (string) $industry->id)>{{ $industry->name }}</option>@endforeach</select></label>
+                        <label class="dnt-business-application__full">Lĩnh vực hoạt động <b>*</b><select class="ui-select" name="industry_ids[]" multiple required size="6">@foreach($industries as $industry)<option value="{{ $industry->id }}" @selected(in_array((string) $industry->id, $selectedIndustryIds, true))>{{ $industry->name }}</option>@endforeach</select><small>Chọn từ 1 đến tối đa 5 lĩnh vực; lĩnh vực đầu tiên là lĩnh vực chính.</small></label>
                         <label>Quy mô <b>*</b><select class="ui-select" name="business_size" required><option value="">Chọn quy mô</option>@foreach(['small' => 'Quy mô nhỏ', 'medium' => 'Quy mô vừa', 'large' => 'Quy mô lớn'] as $value => $label)<option value="{{ $value }}" @selected(old('business_size', $business->business_size) === $value)>{{ $label }}</option>@endforeach</select></label>
                         <label>Chức danh của người đại diện<input class="ui-input" name="job_title" value="{{ old('job_title', $business->representative_job_title) }}" placeholder="Ví dụ: Giám đốc điều hành"></label>
                     </div>

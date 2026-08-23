@@ -19,6 +19,6 @@ return new class extends Migration
 
     public function down(): void
     {
-        // Deliberately non-destructive for review history.
+        // Preserve review history on existing deployments.
     }
 };

@@ -17,16 +17,12 @@ class UserSeeder extends Seeder
         $email = trim((string) env('ADMIN_EMAIL'));
         $password = (string) env('ADMIN_PASSWORD');
 
-        if ($email === '' || $password === '') {
-            return;
-        }
-
         $superAdminRole = Role::query()
             ->where('name', 'super_admin')
             ->where('guard_name', 'admin')
             ->first();
 
-        if ($superAdminRole) {
+        if ($superAdminRole && $email !== '' && $password !== '') {
             $admin = User::query()->updateOrCreate(['email' => $email], [
                 'name' => trim((string) env('ADMIN_NAME', 'Quản trị DNT Bắc Ninh')),
                 'password' => Hash::make($password),
@@ -35,6 +31,18 @@ class UserSeeder extends Seeder
             ]);
             // Tài khoản quản trị cấu hình trong env luôn có quyền super admin.
             $admin->assignRole($superAdminRole);
+        }
+
+        if ($superAdminRole && app()->environment('local')) {
+            $demoAdmin = User::query()->updateOrCreate([
+                'email' => (string) env('DNT_DEMO_ADMIN_EMAIL', 'admin@dnt-seed.example'),
+            ], [
+                'name' => 'Quản trị demo DNT Bắc Ninh',
+                'password' => Hash::make((string) env('DNT_DEMO_ADMIN_PASSWORD', 'password')),
+                'email_verified_at' => now(),
+                'is_active' => true,
+            ]);
+            $demoAdmin->assignRole($superAdminRole);
         }
     }
 }

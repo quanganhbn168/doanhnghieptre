@@ -63,6 +63,7 @@
                             <p>{{ $business->summary ?: 'Thông tin doanh nghiệp đang được cập nhật.' }}</p>
                         </div>
                         <dl>
+                            <div><dt>Lĩnh vực</dt><dd>{{ $business->industry_names ?: 'Đang cập nhật' }}</dd></div>
                             <div><dt>Quy mô</dt><dd>{{ $sizeOptions[$business->business_size] ?? 'Đang cập nhật' }}</dd></div>
                             <div><dt>Chi hội</dt><dd>{{ $business->chapter_name ?: 'Đang cập nhật' }}</dd></div>
                             <div><dt>Khu vực</dt><dd>{{ collect([$business->district, $business->province])->filter()->join(' · ') ?: 'Bắc Ninh' }}</dd></div>

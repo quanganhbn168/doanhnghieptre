@@ -41,7 +41,7 @@ class BusinessForm
                         'medium' => 'Quy mô vừa',
                         'large' => 'Quy mô lớn',
                     ]),
-                    Select::make('industries')->label('Lĩnh vực hoạt động')->relationship('industries', 'name')->multiple()->searchable()->preload()->columnSpanFull(),
+                    Select::make('industries')->label('Lĩnh vực hoạt động')->relationship('industries', 'name')->multiple()->required()->minItems(1)->maxItems(5)->maxItemsMessage('Mỗi doanh nghiệp chỉ được chọn tối đa 5 lĩnh vực hoạt động.')->helperText('Chọn từ 1 đến tối đa 5 lĩnh vực; lĩnh vực đầu tiên là lĩnh vực chính.')->searchable()->preload()->columnSpanFull(),
                     TextInput::make('phone')->label('Điện thoại')->tel()->maxLength(30),
                     TextInput::make('email')->label('Email')->email()->maxLength(255),
                     TextInput::make('website')->label('Website')->url()->maxLength(2048)->columnSpanFull(),

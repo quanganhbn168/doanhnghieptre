@@ -7,6 +7,7 @@ use App\Models\PostCategory;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Hash;
 
 /**
  * Dữ liệu nền tảng cho cổng thông tin Hội Doanh nhân trẻ Bắc Ninh.
@@ -25,15 +26,45 @@ class DntFoundationSeeder extends Seeder
             $chapterIds = $this->seedBusinessChapters($now);
             $positionIds = $this->seedOrganizationPositions($now);
             $offeringCategoryIds = $this->seedOfferingCategories($now);
-            $memberIds = $this->seedMembers($now);
+            $demoUserIds = $this->seedDemoApplicantUsers($now);
+            $memberIds = $this->seedMembers($now, $demoUserIds);
 
             $this->seedPositionAssignments($memberIds, $positionIds, $now);
-            $businessIds = $this->seedBusinesses($categoryIds, $chapterIds, $industryIds, $memberIds, $now);
+            $businessIds = $this->seedBusinesses($categoryIds, $chapterIds, $industryIds, $memberIds, $demoUserIds, $now);
             $this->seedOfferings($businessIds, $memberIds, $offeringCategoryIds, $industryIds, $now);
             $this->seedEvents($now);
             $this->seedTradePosts($businessIds, $memberIds, $industryIds, $now);
             $this->seedNews();
         });
+    }
+
+    /**
+     * Tài khoản minh hoạ luồng nộp hồ sơ. Chỉ tài khoản có hồ sơ đã duyệt mới
+     * được tạo hội viên, đúng với quy trình vận hành thực tế của Hội.
+     *
+     * @return array<string, int>
+     */
+    private function seedDemoApplicantUsers(Carbon $now): array
+    {
+        $password = Hash::make((string) env('DNT_DEMO_PASSWORD', 'password'));
+        $users = [
+            'approved' => ['name' => 'Trần Đức Minh', 'email' => 'hoi-vien.demo@dnt-seed.example', 'phone' => '0200 000 1013'],
+            'pending' => ['name' => 'Nguyễn Thu Trang', 'email' => 'cho-duyet.demo@dnt-seed.example', 'phone' => '0200 000 1014'],
+            'rejected' => ['name' => 'Lê Thành Nam', 'email' => 'bo-sung.demo@dnt-seed.example', 'phone' => '0200 000 1015'],
+            'draft' => ['name' => 'Phạm Khánh Vy', 'email' => 'ban-nhap.demo@dnt-seed.example', 'phone' => '0200 000 1016'],
+        ];
+
+        $ids = [];
+        foreach ($users as $key => $user) {
+            $ids[$key] = $this->upsert('users', ['email' => $user['email']], [
+                ...$user,
+                'password' => $password,
+                'email_verified_at' => $now,
+                'is_active' => true,
+            ], $now);
+        }
+
+        return $ids;
     }
 
     /** @return array<string, int> */
@@ -174,7 +205,7 @@ class DntFoundationSeeder extends Seeder
     }
 
     /** @return array<string, int> */
-    private function seedMembers(Carbon $now): array
+    private function seedMembers(Carbon $now, array $demoUserIds): array
     {
         $members = [
             ['member_code' => 'DNTBN-001', 'full_name' => 'Nguyễn Minh An', 'email' => 'minh.an@dnt-seed.example', 'phone' => '0200 000 1001', 'introduction' => 'Đại diện doanh nghiệp công nghệ số.'],
@@ -189,12 +220,17 @@ class DntFoundationSeeder extends Seeder
             ['member_code' => 'DNTBN-010', 'full_name' => 'Đặng Việt Phong', 'email' => 'viet.phong@dnt-seed.example', 'phone' => '0200 000 1010', 'introduction' => 'Đại diện doanh nghiệp nội thất.'],
             ['member_code' => 'DNTBN-011', 'full_name' => 'Ngô Khánh Linh', 'email' => 'khanh.linh@dnt-seed.example', 'phone' => '0200 000 1011', 'introduction' => 'Đại diện doanh nghiệp giáo dục công nghệ.'],
             ['member_code' => 'DNTBN-012', 'full_name' => 'Đinh Gia Bảo', 'email' => 'gia.bao@dnt-seed.example', 'phone' => '0200 000 1012', 'introduction' => 'Đại diện doanh nghiệp tự động hoá.'],
+            ['member_code' => 'DNTBN-013', 'user_key' => 'approved', 'full_name' => 'Trần Đức Minh', 'email' => 'hoi-vien.demo@dnt-seed.example', 'phone' => '0200 000 1013', 'introduction' => 'Hội viên đại diện được tạo khi hồ sơ doanh nghiệp minh hoạ đã được Hội duyệt.'],
         ];
 
         $ids = [];
         foreach ($members as $index => $member) {
+            $memberValues = $member;
+            unset($memberValues['user_key']);
+
             $ids[$member['member_code']] = $this->upsert('members', ['member_code' => $member['member_code']], [
-                ...$member,
+                ...$memberValues,
+                'user_id' => isset($member['user_key']) ? $demoUserIds[$member['user_key']] : null,
                 'province' => 'Bắc Ninh',
                 'district' => $index % 2 === 0 ? 'Bắc Ninh' : 'Từ Sơn',
                 'status' => 'approved',
@@ -243,8 +279,8 @@ class DntFoundationSeeder extends Seeder
         }
     }
 
-    /** @return array<string, int> @param array<string, int> $categoryIds @param array<string, int> $chapterIds @param array<string, int> $industryIds @param array<string, int> $memberIds */
-    private function seedBusinesses(array $categoryIds, array $chapterIds, array $industryIds, array $memberIds, Carbon $now): array
+    /** @return array<string, int> @param array<string, int> $categoryIds @param array<string, int> $chapterIds @param array<string, int> $industryIds @param array<string, int> $memberIds @param array<string, int> $demoUserIds */
+    private function seedBusinesses(array $categoryIds, array $chapterIds, array $industryIds, array $memberIds, array $demoUserIds, Carbon $now): array
     {
         $businesses = [
             ['slug' => 'cong-nghe-kinh-bac-so', 'tax_code' => 'DNT-SEED-001', 'name' => 'Công ty Cổ phần Công nghệ Kinh Bắc Số', 'category' => 'cong-nghe', 'industry' => 'phan-mem-chuyen-doi-so', 'chapter' => 'chi-hoi-cong-nghe-doi-moi', 'size' => 'medium', 'member_code' => 'DNTBN-001', 'business_type' => 'joint_stock', 'summary' => 'Giải pháp phần mềm quản trị và chuyển đổi số cho doanh nghiệp vừa và nhỏ.'],
@@ -259,10 +295,38 @@ class DntFoundationSeeder extends Seeder
             ['slug' => 'noi-that-khong-gian-viet', 'tax_code' => 'DNT-SEED-010', 'name' => 'Công ty TNHH Nội thất & Không gian Việt', 'category' => 'xay-dung-vat-lieu', 'industry' => 'vat-lieu-xay-dung', 'chapter' => 'chi-hoi-ha-tang-logistics', 'size' => 'small', 'member_code' => 'DNTBN-010', 'business_type' => 'limited', 'summary' => 'Thiết kế, thi công nội thất và cung cấp giải pháp không gian làm việc.'],
             ['slug' => 'giao-duc-cong-nghe-nextstep', 'tax_code' => 'DNT-SEED-011', 'name' => 'Công ty Cổ phần Giáo dục công nghệ NextStep', 'category' => 'giao-duc-dao-tao', 'industry' => 'giao-duc-dao-tao', 'chapter' => 'chi-hoi-cong-nghe-doi-moi', 'size' => 'small', 'member_code' => 'DNTBN-011', 'business_type' => 'joint_stock', 'summary' => 'Đào tạo kỹ năng số và nhân lực kỹ thuật cho doanh nghiệp.'],
             ['slug' => 'tu-dong-hoa-kinh-bac', 'tax_code' => 'DNT-SEED-012', 'name' => 'Công ty TNHH Tự động hoá Kinh Bắc', 'category' => 'cong-nghe', 'industry' => 'tu-dong-hoa-iot', 'chapter' => 'chi-hoi-cong-nghe-doi-moi', 'size' => 'medium', 'member_code' => 'DNTBN-012', 'business_type' => 'limited', 'summary' => 'Tích hợp dây chuyền tự động hoá và giải pháp giám sát sản xuất.'],
+            ['slug' => 'minh-duc-tech-demo', 'tax_code' => 'DNT-DEMO-013', 'name' => 'Công ty TNHH Minh Đức Tech', 'category' => 'cong-nghe', 'industry' => 'phan-mem-chuyen-doi-so', 'chapter' => 'chi-hoi-cong-nghe-doi-moi', 'size' => 'small', 'member_code' => 'DNTBN-013', 'applicant' => 'approved', 'status' => 'approved', 'business_type' => 'limited', 'summary' => 'Hồ sơ doanh nghiệp đã được duyệt, sẵn sàng hiển thị tại danh bạ và cổng hội viên.', 'job_title' => 'Giám đốc điều hành'],
+            ['slug' => 'thu-trang-logistics-demo', 'tax_code' => 'DNT-DEMO-014', 'name' => 'Công ty TNHH Logistics Thu Trang', 'category' => 'logistics', 'industry' => 'van-tai-kho-bai', 'chapter' => 'chi-hoi-ha-tang-logistics', 'size' => 'medium', 'applicant' => 'pending', 'status' => 'pending', 'business_type' => 'limited', 'summary' => 'Hồ sơ doanh nghiệp đã nộp, đang chờ Hội kiểm tra thông tin và phê duyệt.', 'job_title' => 'Giám đốc'],
+            ['slug' => 'nam-viet-noi-that-demo', 'tax_code' => 'DNT-DEMO-015', 'name' => 'Công ty TNHH Nội thất Nam Việt', 'category' => 'xay-dung-vat-lieu', 'industry' => 'vat-lieu-xay-dung', 'chapter' => 'chi-hoi-ha-tang-logistics', 'size' => 'small', 'applicant' => 'rejected', 'status' => 'rejected', 'business_type' => 'limited', 'summary' => 'Hồ sơ cần bổ sung mô tả năng lực và tài liệu xác thực trước khi gửi lại Hội.', 'job_title' => 'Giám đốc'],
+            ['slug' => 'khanh-vy-food-demo', 'tax_code' => 'DNT-DEMO-016', 'name' => 'Công ty TNHH Thực phẩm Khánh Vy', 'category' => 'nong-nghiep-thuc-pham', 'industry' => 'thuc-pham-do-uong', 'chapter' => 'chi-hoi-thuong-mai-dich-vu', 'size' => 'small', 'applicant' => 'draft', 'status' => 'draft', 'business_type' => 'limited', 'summary' => 'Hồ sơ mới khởi tạo dưới dạng bản nháp để minh hoạ quy trình hoàn thiện trước khi nộp.', 'job_title' => 'Giám đốc'],
+        ];
+
+        // Dữ liệu danh bạ dùng 1–3 lĩnh vực/doanh nghiệp để kiểm tra bộ lọc.
+        // Giới hạn nghiệp vụ là tối đa 5 lĩnh vực cho một doanh nghiệp.
+        $additionalIndustries = [
+            'cong-nghe-kinh-bac-so' => ['thuong-mai-dien-tu', 'tu-dong-hoa-iot'],
+            'co-khi-an-phu-bac-ninh' => ['cong-nghiep-ho-tro'],
+            'dien-tu-viet-thanh' => ['tu-dong-hoa-iot'],
+            'logistics-dong-do-kinh-bac' => ['xuat-nhap-khau'],
+            'xay-dung-ha-tang-bac-ha' => ['vat-lieu-xay-dung'],
+            'thuc-pham-sach-vi-kinh-bac' => ['nong-nghiep-cong-nghe-cao'],
+            'vat-lieu-xanh-dai-phuc' => ['xay-dung-dan-dung-cong-nghiep'],
+            'nong-nghiep-cong-nghe-cao-an-thinh' => ['thuc-pham-do-uong'],
+            'thuong-mai-phan-phoi-minh-phat' => ['thuong-mai-dien-tu'],
+            'noi-that-khong-gian-viet' => ['xay-dung-dan-dung-cong-nghiep'],
+            'giao-duc-cong-nghe-nextstep' => ['phan-mem-chuyen-doi-so'],
+            'tu-dong-hoa-kinh-bac' => ['phan-mem-chuyen-doi-so', 'dien-tu-cong-nghiep'],
+            'minh-duc-tech-demo' => ['thuong-mai-dien-tu', 'tu-dong-hoa-iot'],
+            'thu-trang-logistics-demo' => ['xuat-nhap-khau'],
+            'nam-viet-noi-that-demo' => ['xay-dung-dan-dung-cong-nghiep'],
+            'khanh-vy-food-demo' => ['nong-nghiep-cong-nghe-cao'],
         ];
 
         $ids = [];
         foreach ($businesses as $index => $business) {
+            $status = $business['status'] ?? 'approved';
+            $memberCode = $business['member_code'] ?? null;
+
             $ids[$business['slug']] = $this->upsert('businesses', ['slug' => $business['slug']], [
                 'business_category_id' => $categoryIds[$business['category']],
                 'business_chapter_id' => $chapterIds[$business['chapter']],
@@ -281,40 +345,82 @@ class DntFoundationSeeder extends Seeder
                 'description' => $business['summary'].' Doanh nghiệp tham gia kết nối, hợp tác và chia sẻ nguồn lực trong cộng đồng doanh nhân trẻ.',
                 'social_links' => json_encode(['linkedin' => null, 'facebook' => null], JSON_UNESCAPED_UNICODE),
                 'location' => json_encode(['province' => 'Bắc Ninh'], JSON_UNESCAPED_UNICODE),
-                'status' => 'approved',
-                'is_featured' => $index < 8,
-                'approved_at' => $now->copy()->subDays(45 - $index),
+                'status' => $status,
+                'is_featured' => $status === 'approved' && $index < 8,
+                'submitted_by_user_id' => isset($business['applicant']) ? $demoUserIds[$business['applicant']] : null,
+                'representative_job_title' => $business['job_title'] ?? ($index % 3 === 0 ? 'Giám đốc điều hành' : 'Giám đốc'),
+                'approved_at' => $status === 'approved' ? $now->copy()->subDays(45 - $index) : null,
             ], $now);
 
-            $this->upsert('business_members', [
-                'business_id' => $ids[$business['slug']],
-                'member_id' => $memberIds[$business['member_code']],
-            ], [
-                'role' => 'representative',
-                'job_title' => $index % 3 === 0 ? 'Giám đốc điều hành' : 'Giám đốc',
-                'is_primary' => true,
-                'status' => 'active',
-                'started_at' => $now->copy()->subMonths(10)->toDateString(),
-                'ended_at' => null,
-            ], $now);
+            if ($memberCode) {
+                $this->upsert('business_members', [
+                    'business_id' => $ids[$business['slug']],
+                    'member_id' => $memberIds[$memberCode],
+                ], [
+                    'role' => 'representative',
+                    'job_title' => $business['job_title'] ?? ($index % 3 === 0 ? 'Giám đốc điều hành' : 'Giám đốc'),
+                    'is_primary' => true,
+                    'status' => 'active',
+                    'started_at' => $now->copy()->subMonths(10)->toDateString(),
+                    'ended_at' => null,
+                ], $now);
+            }
 
-            $this->upsert('business_industries', [
-                'business_id' => $ids[$business['slug']],
-                'industry_id' => $industryIds[$business['industry']],
-            ], ['is_primary' => true], $now);
+            $industrySlugs = array_values(array_unique([
+                $business['industry'],
+                ...($additionalIndustries[$business['slug']] ?? []),
+            ]));
 
-            $this->upsert('business_status_histories', [
-                'business_id' => $ids[$business['slug']],
-                'to_status' => 'approved',
-            ], [
-                'from_status' => 'pending',
-                'reason' => 'Khởi tạo dữ liệu danh bạ doanh nghiệp.',
-                'metadata' => json_encode(['source' => 'dnt-foundation-seeder'], JSON_UNESCAPED_UNICODE),
-                'changed_at' => $now,
-            ], $now, false);
+            foreach ($industrySlugs as $industryIndex => $industrySlug) {
+                $this->upsert('business_industries', [
+                    'business_id' => $ids[$business['slug']],
+                    'industry_id' => $industryIds[$industrySlug],
+                ], ['is_primary' => $industryIndex === 0], $now);
+            }
+
+            $this->seedBusinessStatusHistory($ids[$business['slug']], $status, $now, isset($business['applicant']));
         }
 
         return $ids;
+    }
+
+    private function seedBusinessStatusHistory(int $businessId, string $status, Carbon $now, bool $isApplicationDemo): void
+    {
+        $steps = $isApplicationDemo
+            ? match ($status) {
+                'draft' => [['from' => null, 'to' => 'draft', 'reason' => 'Hồ sơ được tạo từ tài khoản minh hoạ và chưa gửi duyệt.']],
+                'pending' => [
+                    ['from' => null, 'to' => 'draft', 'reason' => 'Hồ sơ được tạo từ tài khoản minh hoạ.'],
+                    ['from' => 'draft', 'to' => 'pending', 'reason' => 'Hồ sơ đã được gửi tới Hội để kiểm tra.'],
+                ],
+                'rejected' => [
+                    ['from' => null, 'to' => 'draft', 'reason' => 'Hồ sơ được tạo từ tài khoản minh hoạ.'],
+                    ['from' => 'draft', 'to' => 'pending', 'reason' => 'Hồ sơ đã được gửi tới Hội để kiểm tra.'],
+                    ['from' => 'pending', 'to' => 'rejected', 'reason' => 'Cần bổ sung bản mô tả năng lực và thông tin xác thực người đại diện.'],
+                ],
+                default => [
+                    ['from' => null, 'to' => 'draft', 'reason' => 'Hồ sơ được tạo từ tài khoản minh hoạ.'],
+                    ['from' => 'draft', 'to' => 'pending', 'reason' => 'Hồ sơ đã được gửi tới Hội để kiểm tra.'],
+                    ['from' => 'pending', 'to' => 'approved', 'reason' => 'Hồ sơ đã được Hội duyệt; người nộp được công nhận là hội viên đại diện.'],
+                ],
+            }
+            : [[
+                'from' => 'pending',
+                'to' => 'approved',
+                'reason' => 'Khởi tạo dữ liệu danh bạ doanh nghiệp.',
+            ]];
+
+        foreach ($steps as $index => $step) {
+            $this->upsert('business_status_histories', [
+                'business_id' => $businessId,
+                'to_status' => $step['to'],
+            ], [
+                'from_status' => $step['from'],
+                'reason' => $step['reason'],
+                'metadata' => json_encode(['source' => 'dnt-foundation-seeder', 'demo_application' => $isApplicationDemo], JSON_UNESCAPED_UNICODE),
+                'changed_at' => $now->copy()->subDays(count($steps) - $index),
+            ], $now, false);
+        }
     }
 
     /** @param array<string, int> $businessIds @param array<string, int> $memberIds @param array<string, int> $categoryIds @param array<string, int> $industryIds */

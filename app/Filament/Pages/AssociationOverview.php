@@ -59,7 +59,7 @@ class AssociationOverview extends Page
                 'label' => 'Cơ hội giao thương',
                 'value' => $this->count('trade_posts', fn ($query) => $query->where('status', 'approved')->where(fn ($expired) => $expired->whereNull('expires_at')->orWhere('expires_at', '>=', now()))),
                 'description' => 'Cơ hội còn hiệu lực trên nền tảng',
-                'icon' => 'heroicon-o-handshake',
+                'icon' => 'heroicon-o-arrows-right-left',
             ],
             [
                 'label' => 'Đăng ký sự kiện',

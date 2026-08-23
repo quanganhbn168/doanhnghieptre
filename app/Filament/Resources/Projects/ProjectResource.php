@@ -16,6 +16,8 @@ use UnitEnum;
 
 class ProjectResource extends Resource
 {
+    protected static bool $shouldRegisterNavigation = false;
+
     protected static ?string $model = Project::class;
 
     protected static string|BackedEnum|null $navigationIcon = 'heroicon-o-briefcase';

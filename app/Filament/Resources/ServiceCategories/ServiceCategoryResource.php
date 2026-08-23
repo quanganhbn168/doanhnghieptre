@@ -16,6 +16,8 @@ use UnitEnum;
 
 class ServiceCategoryResource extends Resource
 {
+    protected static bool $shouldRegisterNavigation = false;
+
     protected static ?string $model = ServiceCategory::class;
 
     protected static string|BackedEnum|null $navigationIcon = 'heroicon-o-rectangle-group';

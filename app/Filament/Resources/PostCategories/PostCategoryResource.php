@@ -26,7 +26,7 @@ class PostCategoryResource extends Resource
 
     protected static ?string $pluralModelLabel = 'chuyên mục';
 
-    protected static string|UnitEnum|null $navigationGroup = 'Tin tức';
+    protected static string|UnitEnum|null $navigationGroup = 'Nội dung website';
 
     protected static ?int $navigationSort = 10;
 

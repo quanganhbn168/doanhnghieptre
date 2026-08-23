@@ -16,6 +16,8 @@ use UnitEnum;
 
 class PricingPlanResource extends Resource
 {
+    protected static bool $shouldRegisterNavigation = false;
+
     protected static ?string $model = PricingPlan::class;
 
     protected static string|BackedEnum|null $navigationIcon = 'heroicon-o-tag';

@@ -20,7 +20,7 @@ class SliderItemResource extends Resource
 
     protected static string|BackedEnum|null $navigationIcon = 'heroicon-o-rectangle-stack';
 
-    protected static ?string $navigationLabel = 'Các slide';
+    protected static ?string $navigationLabel = 'Nội dung banner';
 
     protected static ?string $modelLabel = 'slide';
 

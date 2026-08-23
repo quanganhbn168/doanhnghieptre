@@ -20,11 +20,11 @@ class SliderResource extends Resource
 
     protected static string|BackedEnum|null $navigationIcon = 'heroicon-o-photo';
 
-    protected static ?string $navigationLabel = 'Slider';
+    protected static ?string $navigationLabel = 'Banner đầu trang';
 
-    protected static ?string $modelLabel = 'slider';
+    protected static ?string $modelLabel = 'banner';
 
-    protected static ?string $pluralModelLabel = 'slider';
+    protected static ?string $pluralModelLabel = 'banner đầu trang';
 
     protected static string|UnitEnum|null $navigationGroup = 'Nội dung trang chủ';
 

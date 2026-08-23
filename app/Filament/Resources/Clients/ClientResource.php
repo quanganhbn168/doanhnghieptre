@@ -20,15 +20,15 @@ class ClientResource extends Resource
 
     protected static string|BackedEnum|null $navigationIcon = 'heroicon-o-building-office-2';
 
-    protected static ?string $navigationLabel = 'Khách hàng & đối tác';
+    protected static ?string $navigationLabel = 'Đối tác đồng hành';
 
-    protected static ?string $modelLabel = 'khách hàng / đối tác';
+    protected static ?string $modelLabel = 'đối tác đồng hành';
 
-    protected static ?string $pluralModelLabel = 'khách hàng / đối tác';
+    protected static ?string $pluralModelLabel = 'đối tác đồng hành';
 
-    protected static string|UnitEnum|null $navigationGroup = 'Nội dung chính';
+    protected static string|UnitEnum|null $navigationGroup = 'Nội dung website';
 
-    protected static ?int $navigationSort = 30;
+    protected static ?int $navigationSort = 40;
 
     public static function form(Schema $schema): Schema
     {

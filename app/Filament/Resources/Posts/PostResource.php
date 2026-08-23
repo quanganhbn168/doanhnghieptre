@@ -26,7 +26,7 @@ class PostResource extends Resource
 
     protected static ?string $pluralModelLabel = 'tin tức';
 
-    protected static string|UnitEnum|null $navigationGroup = 'Tin tức';
+    protected static string|UnitEnum|null $navigationGroup = 'Nội dung website';
 
     protected static ?int $navigationSort = 20;
 

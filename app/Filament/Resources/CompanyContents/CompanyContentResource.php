@@ -20,14 +20,13 @@ class CompanyContentResource extends Resource
 
     protected static string|BackedEnum|null $navigationIcon = 'heroicon-o-building-office-2';
 
-    protected static ?string $navigationLabel = 'Nội dung công ty';
+    protected static ?string $navigationLabel = 'Giới thiệu về Hội';
 
-    protected static ?string $modelLabel = 'nội dung công ty';
+    protected static ?string $modelLabel = 'nội dung giới thiệu';
 
-    protected static ?string $pluralModelLabel = 'nội dung công ty';
+    protected static ?string $pluralModelLabel = 'nội dung giới thiệu';
 
-    // Đưa mục này ra cấp sidebar chính để không bị khuất khi group Nội dung chính đang thu gọn.
-    protected static string|UnitEnum|null $navigationGroup = null;
+    protected static string|UnitEnum|null $navigationGroup = 'Nội dung website';
 
     protected static ?int $navigationSort = 30;
 

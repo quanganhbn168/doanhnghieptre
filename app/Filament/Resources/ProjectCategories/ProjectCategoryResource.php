@@ -16,6 +16,8 @@ use UnitEnum;
 
 class ProjectCategoryResource extends Resource
 {
+    protected static bool $shouldRegisterNavigation = false;
+
     protected static ?string $model = ProjectCategory::class;
 
     protected static string|BackedEnum|null $navigationIcon = 'heroicon-o-tag';

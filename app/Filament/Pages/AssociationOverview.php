@@ -17,13 +17,13 @@ class AssociationOverview extends Dashboard
 
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedChartBarSquare;
 
-    protected static ?string $navigationLabel = 'Tổng quan Hội';
+    protected static ?string $navigationLabel = 'Dashboard';
 
     protected static ?string $title = 'Tổng quan vận hành Hội';
 
-    protected static string|UnitEnum|null $navigationGroup = 'Quản lý Hội';
+    protected static string|UnitEnum|null $navigationGroup = null;
 
-    protected static ?int $navigationSort = 1;
+    protected static ?int $navigationSort = -100;
 
     protected string $view = 'filament.pages.association-overview';
 

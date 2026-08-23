@@ -14,8 +14,6 @@ use App\Filament\Pages\AssociationOverview;
 use Filament\Panel;
 use Filament\PanelProvider;
 use Filament\Support\Colors\Color;
-use Filament\Widgets\AccountWidget;
-use Filament\Widgets\FilamentInfoWidget;
 use Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse;
 use Illuminate\Cookie\Middleware\EncryptCookies;
 use Illuminate\Foundation\Http\Middleware\VerifyCsrfToken;
@@ -42,12 +40,9 @@ class AdminPanelProvider extends PanelProvider
             ])
             ->viteTheme('resources/css/filament/admin/theme.css')
             ->navigationGroups([
-                NavigationGroup::make('Nội dung chính'),
+                NavigationGroup::make('Quản lý Hội'),
                 NavigationGroup::make('Nội dung website'),
                 NavigationGroup::make('Nội dung trang chủ'),
-                NavigationGroup::make('Quản lý Hội'),
-                NavigationGroup::make('Khách hàng & liên hệ'),
-                NavigationGroup::make('SEO'),
                 NavigationGroup::make('Thư viện media'),
                 NavigationGroup::make('Hệ thống'),
                 NavigationGroup::make('Cài đặt website'),
@@ -56,11 +51,6 @@ class AdminPanelProvider extends PanelProvider
             ->discoverPages(in: app_path('Filament/Pages'), for: 'App\Filament\Pages')
             ->pages([
                 AssociationOverview::class,
-            ])
-            ->discoverWidgets(in: app_path('Filament/Widgets'), for: 'App\Filament\Widgets')
-            ->widgets([
-                AccountWidget::class,
-                FilamentInfoWidget::class,
             ])
             ->plugins([
                 FilamentShieldPlugin::make()

@@ -108,5 +108,6 @@ class Business extends Model implements HasMedia
     public function registerMediaCollections(): void
     {
         $this->addMediaCollection('logo')->singleFile()->useDisk('public_media');
+        $this->addMediaCollection('signed_membership_application')->singleFile()->useDisk('local');
     }
 }

@@ -17,7 +17,12 @@
         @error('email')<p class="dnt-auth-message">{{ $message }}</p>@enderror
 
         <label for="password">Mật khẩu</label>
-        <input id="password" name="password" type="password" autocomplete="current-password" required>
+        <div class="dnt-auth-password">
+            <input id="password" name="password" type="password" autocomplete="current-password" required>
+            <button class="dnt-auth-password__toggle" type="button" data-password-toggle="password" aria-controls="password" aria-pressed="false">
+                <i class="fa-regular fa-eye" aria-hidden="true"></i><span class="sr-only">Hiện mật khẩu</span>
+            </button>
+        </div>
         @error('password')<p class="dnt-auth-message">{{ $message }}</p>@enderror
 
         <label class="dnt-auth-form__remember"><input name="remember" type="checkbox" value="1"> Ghi nhớ đăng nhập</label>

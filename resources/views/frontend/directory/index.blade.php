@@ -70,7 +70,7 @@
                         </dl>
                         <div class="dnt-business-directory-card__contact">
                             @if($business->phone)<a href="tel:{{ preg_replace('/[^0-9+]/', '', $business->phone) }}"><i class="fa-solid fa-phone" aria-hidden="true"></i> Liên hệ</a>@endif
-                            @if($business->website)<a href="{{ $business->website }}" target="_blank" rel="noopener"><i class="fa-solid fa-arrow-up-right-from-square" aria-hidden="true"></i> Website</a>@endif
+                            @if($business->website)<a href="{{ str_starts_with($business->website, 'http://') || str_starts_with($business->website, 'https://') ? $business->website : 'https://'.$business->website }}" target="_blank" rel="noopener"><i class="fa-solid fa-arrow-up-right-from-square" aria-hidden="true"></i> Website</a>@endif
                         </div>
                     </article>
                 @endforeach

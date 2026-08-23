@@ -28,6 +28,7 @@ class UserSeeder extends Seeder
                 'password' => Hash::make($password),
                 'email_verified_at' => now(),
                 'is_active' => true,
+                'approval_status' => 'approved',
             ]);
             // Tài khoản quản trị cấu hình trong env luôn có quyền super admin.
             $admin->assignRole($superAdminRole);
@@ -41,6 +42,7 @@ class UserSeeder extends Seeder
                 'password' => Hash::make((string) env('DNT_DEMO_ADMIN_PASSWORD', 'password')),
                 'email_verified_at' => now(),
                 'is_active' => true,
+                'approval_status' => 'approved',
             ]);
             $demoAdmin->assignRole($superAdminRole);
         }

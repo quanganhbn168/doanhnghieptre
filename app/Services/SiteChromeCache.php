@@ -2,9 +2,10 @@
 
 namespace App\Services;
 
+use App\Models\Intro;
 use App\Models\Menu;
-use App\Models\SiteAsset;
 use App\Models\ServiceCategory;
+use App\Models\SiteAsset;
 use App\Settings\WebsiteSettings;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Schema;
@@ -12,7 +13,7 @@ use Throwable;
 
 class SiteChromeCache
 {
-    public const KEY = 'site:chrome:v6';
+    public const KEY = 'site:chrome:v7';
 
     public function get(): array
     {
@@ -39,6 +40,15 @@ class SiteChromeCache
         $megaMenu = null;
         $footerMenus = collect();
         $serviceCategories = collect();
+        $aboutIntros = collect();
+
+        if (Schema::hasTable('intros')) {
+            $aboutIntros = Intro::query()
+                ->visibleOnSite()
+                ->orderBy('sort_order')
+                ->orderBy('id')
+                ->get(['title', 'slug']);
+        }
 
         if (Schema::hasTable('service_categories') && Schema::hasTable('services')) {
             $serviceCategories = ServiceCategory::query()
@@ -57,7 +67,7 @@ class SiteChromeCache
         }
 
         if (! Schema::hasTable('settings') || ! Schema::hasTable('menus') || ! Schema::hasTable('menu_items')) {
-            return compact('siteAssets', 'headerMenu', 'megaMenu', 'footerMenus', 'serviceCategories');
+            return compact('siteAssets', 'headerMenu', 'megaMenu', 'footerMenus', 'serviceCategories', 'aboutIntros');
         }
 
         try {
@@ -81,6 +91,6 @@ class SiteChromeCache
             // Cho phép cài đặt và migrate khi settings chưa hoàn chỉnh.
         }
 
-        return compact('siteAssets', 'headerMenu', 'megaMenu', 'footerMenus', 'serviceCategories');
+        return compact('siteAssets', 'headerMenu', 'megaMenu', 'footerMenus', 'serviceCategories', 'aboutIntros');
     }
 }

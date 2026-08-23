@@ -2,11 +2,12 @@
 
 namespace App\Providers;
 
+use App\Models\Intro;
 use App\Models\Menu;
 use App\Models\MenuItem;
-use App\Models\SiteAsset;
 use App\Models\Service;
 use App\Models\ServiceCategory;
+use App\Models\SiteAsset;
 use App\Models\User;
 use App\Services\PopupService;
 use App\Services\SiteChromeCache;
@@ -83,7 +84,7 @@ class AppServiceProvider extends ServiceProvider
             ]);
         });
 
-        View::composer(['frontend.home', 'frontend.about', 'frontend.contact'], function ($view): void {
+        View::composer(['frontend.home', 'frontend.contact'], function ($view): void {
             $aboutSettings = null;
             $homepageSettings = null;
             $contactSettings = null;
@@ -102,7 +103,7 @@ class AppServiceProvider extends ServiceProvider
             $view->with(compact('aboutSettings', 'homepageSettings', 'contactSettings', 'siteAssets'));
         });
 
-        foreach ([Menu::class, MenuItem::class, Service::class, ServiceCategory::class] as $model) {
+        foreach ([Intro::class, Menu::class, MenuItem::class, Service::class, ServiceCategory::class] as $model) {
             $model::saved(fn () => app(SiteChromeCache::class)->forget());
             $model::deleted(fn () => app(SiteChromeCache::class)->forget());
         }

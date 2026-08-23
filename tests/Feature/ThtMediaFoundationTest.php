@@ -4,15 +4,13 @@ namespace Tests\Feature;
 
 use App\Models\PostCategory;
 use App\Models\Service;
-use App\Models\CompanyContent;
+use App\Services\WebsiteSettingsService;
 use App\Settings\CompanySettings;
 use App\Settings\ContactSettings;
 use App\Settings\HomepageSettings;
 use App\Settings\SeoSettings;
 use App\Settings\TrackingSettings;
 use App\Settings\WebsiteSettings;
-use App\Services\CompanyContentService;
-use App\Services\WebsiteSettingsService;
 use Database\Seeders\ThtMediaFoundationSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\File;
@@ -66,85 +64,6 @@ class ThtMediaFoundationTest extends TestCase
         $this->seed();
 
         $this->get(route('home'))->assertOk()->assertSee('THT MEDIA VN');
-    }
-
-    public function test_about_page_renders_company_content_records(): void
-    {
-        $this->seed();
-
-        CompanyContent::query()->create([
-            'type' => 'team',
-            'slug' => 'doi-ngu-san-xuat',
-            'title' => ['vi' => 'Đội ngũ sản xuất'],
-            'summary' => ['vi' => 'Phụ trách kết nối tiền kỳ, hiện trường và hậu kỳ.'],
-            'is_active' => true,
-        ]);
-        CompanyContent::query()->create([
-            'type' => 'facility',
-            'slug' => 'studio-san-xuat',
-            'title' => ['vi' => 'Studio sản xuất'],
-            'summary' => ['vi' => 'Không gian phục vụ quay, chụp và livestream.'],
-            'is_active' => true,
-        ]);
-        CompanyContent::query()->create([
-            'type' => 'faq',
-            'slug' => 'tht-media-trien-khai-tu-giai-doan-nao',
-            'title' => ['vi' => 'THT Media nhận triển khai từ giai đoạn nào?'],
-            'content' => ['vi' => '<p>Từ định hướng, sản xuất đến bàn giao.</p>'],
-            'is_active' => true,
-        ]);
-
-        $this->get(route('about'))
-            ->assertOk()
-            ->assertSee('Đội ngũ sản xuất')
-            ->assertSee('Studio sản xuất')
-            ->assertSee('THT Media nhận triển khai từ giai đoạn nào?')
-            ->assertSee('Từ định hướng, sản xuất đến bàn giao.');
-    }
-
-    public function test_company_content_has_an_article_like_detail_page(): void
-    {
-        $this->seed();
-
-        $content = CompanyContent::query()->create([
-            'type' => 'article',
-            'slug' => 'cau-chuyen-thuong-hieu',
-            'title' => ['vi' => 'Câu chuyện thương hiệu'],
-            'summary' => ['vi' => 'Một câu chuyện ngắn về THT Media.'],
-            'content' => ['vi' => '<p>Nội dung bài viết công ty.</p>'],
-            'is_active' => true,
-        ]);
-
-        $this->get(route('about.content.show', ['slug' => $content->routeSlug('vi')]))
-            ->assertOk()
-            ->assertSee('Câu chuyện thương hiệu')
-            ->assertSee('Nội dung bài viết công ty.');
-
-        $this->assertSame('cau-chuyen-thuong-hieu', $content->getSlug('vi'));
-        $this->assertDatabaseHas('slugs', [
-            'sluggable_type' => CompanyContent::class,
-            'sluggable_id' => $content->id,
-            'locale' => 'vi',
-            'slug' => 'cau-chuyen-thuong-hieu',
-        ]);
-    }
-
-    public function test_company_content_slug_is_unique_across_company_contents(): void
-    {
-        $this->seed();
-        $service = app(CompanyContentService::class);
-
-        $first = $service->create([
-            'title' => ['vi' => 'Bài viết trùng đường dẫn'],
-            'is_active' => true,
-        ]);
-        $second = $service->create([
-            'title' => ['vi' => 'Bài viết trùng đường dẫn'],
-            'is_active' => true,
-        ]);
-
-        $this->assertSame('bai-viet-trung-duong-dan', $first->routeSlug('vi'));
-        $this->assertSame('bai-viet-trung-duong-dan-1', $second->routeSlug('vi'));
     }
 
     public function test_contact_directory_renders_multiple_phones_and_active_branches(): void

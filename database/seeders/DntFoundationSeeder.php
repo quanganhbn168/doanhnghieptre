@@ -22,6 +22,7 @@ class DntFoundationSeeder extends Seeder
         DB::transaction(function (): void {
             $now = now();
             $industryIds = $this->seedIndustries($now);
+            $this->seedProfessionalGroups($now);
             $categoryIds = $this->seedBusinessCategories($now);
             $chapterIds = $this->seedBusinessChapters($now);
             $positionIds = $this->seedOrganizationPositions($now);
@@ -35,6 +36,7 @@ class DntFoundationSeeder extends Seeder
             $this->seedEvents($now);
             $this->seedTradePosts($businessIds, $memberIds, $industryIds, $now);
             $this->seedNews();
+            $this->seedIntros($now);
         });
     }
 
@@ -61,6 +63,7 @@ class DntFoundationSeeder extends Seeder
                 'password' => $password,
                 'email_verified_at' => $now,
                 'is_active' => true,
+                'approval_status' => 'approved',
             ], $now);
         }
 
@@ -145,23 +148,80 @@ class DntFoundationSeeder extends Seeder
         ])->all();
     }
 
+    private function seedProfessionalGroups(Carbon $now): void
+    {
+        $groups = [
+            ['slug' => 'nong-lam-ngu-nghiep', 'name' => 'Nông, lâm nghiệp và thủy sản'],
+            ['slug' => 'cong-nghiep-che-bien-che-tao', 'name' => 'Công nghiệp chế biến, chế tạo'],
+            ['slug' => 'xay-dung', 'name' => 'Xây dựng'],
+            ['slug' => 'thuong-mai-ban-buon-ban-le', 'name' => 'Thương mại, bán buôn và bán lẻ'],
+            ['slug' => 'van-tai-kho-bai', 'name' => 'Vận tải và kho bãi'],
+            ['slug' => 'luu-tru-an-uong', 'name' => 'Lưu trú và ăn uống'],
+            ['slug' => 'thong-tin-truyen-thong', 'name' => 'Thông tin và truyền thông'],
+            ['slug' => 'tai-chinh-ngan-hang-bao-hiem', 'name' => 'Tài chính, ngân hàng và bảo hiểm'],
+            ['slug' => 'kinh-doanh-bat-dong-san', 'name' => 'Kinh doanh bất động sản'],
+            ['slug' => 'khoa-hoc-cong-nghe', 'name' => 'Khoa học và công nghệ'],
+            ['slug' => 'tu-van-phap-ly-ke-toan', 'name' => 'Tư vấn pháp lý, kế toán và kiểm toán'],
+            ['slug' => 'dich-vu-hanh-chinh-ho-tro', 'name' => 'Dịch vụ hành chính và hỗ trợ'],
+            ['slug' => 'giao-duc-dao-tao', 'name' => 'Giáo dục và đào tạo'],
+            ['slug' => 'y-te-cham-soc-suc-khoe', 'name' => 'Y tế và chăm sóc sức khỏe'],
+            ['slug' => 'van-hoa-the-thao-giai-tri', 'name' => 'Văn hóa, thể thao và giải trí'],
+            ['slug' => 'dich-vu-ca-nhan-cong-dong', 'name' => 'Dịch vụ cá nhân và cộng đồng'],
+            ['slug' => 'nang-luong-moi-truong', 'name' => 'Năng lượng và môi trường'],
+            ['slug' => 'khac', 'name' => 'Khác'],
+        ];
+
+        foreach ($groups as $sortOrder => $group) {
+            $this->upsert('industries', ['slug' => $group['slug']], [
+                ...$group,
+                'parent_id' => null,
+                'description' => null,
+                'sort_order' => ($sortOrder + 1) * 10,
+                'is_active' => true,
+                'is_member_group' => true,
+            ], $now);
+        }
+    }
+
     /** @return array<string, int> */
     private function seedBusinessChapters(Carbon $now): array
     {
+        DB::table('business_chapters')
+            ->whereIn('slug', [
+                'chi-hoi-san-xuat-cong-nghiep',
+                'chi-hoi-cong-nghe-doi-moi',
+                'chi-hoi-thuong-mai-dich-vu',
+                'chi-hoi-ha-tang-logistics',
+            ])
+            ->update(['is_active' => false, 'updated_at' => $now]);
+
         $chapters = [
-            ['slug' => 'chi-hoi-san-xuat-cong-nghiep', 'name' => 'Chi hội Sản xuất & công nghiệp', 'description' => 'Kết nối doanh nghiệp cơ khí, điện tử và công nghiệp hỗ trợ.'],
-            ['slug' => 'chi-hoi-cong-nghe-doi-moi', 'name' => 'Chi hội Công nghệ & đổi mới', 'description' => 'Kết nối doanh nghiệp công nghệ số, tự động hoá và đổi mới sáng tạo.'],
-            ['slug' => 'chi-hoi-thuong-mai-dich-vu', 'name' => 'Chi hội Thương mại & dịch vụ', 'description' => 'Kết nối doanh nghiệp thương mại, dịch vụ và phát triển thị trường.'],
-            ['slug' => 'chi-hoi-ha-tang-logistics', 'name' => 'Chi hội Hạ tầng & logistics', 'description' => 'Kết nối doanh nghiệp xây dựng, hạ tầng, vận tải và kho bãi.'],
+            ['slug' => 'chi-hoi-bac-giang-yen-dung', 'name' => 'Chi hội Bắc Giang - Yên Dũng', 'description' => 'Tổ chức trực thuộc Hội tại khu vực Bắc Giang - Yên Dũng.'],
+            ['slug' => 'chi-hoi-hiep-hoa-viet-yen', 'name' => 'Chi hội Hiệp Hòa - Việt Yên', 'description' => 'Tổ chức trực thuộc Hội tại khu vực Hiệp Hòa - Việt Yên.'],
+            ['slug' => 'chi-hoi-yen-the-lang-giang-tan-yen', 'name' => 'Chi hội Yên Thế - Lạng Giang - Tân Yên', 'description' => 'Tổ chức trực thuộc Hội tại khu vực Yên Thế - Lạng Giang - Tân Yên.'],
+            ['slug' => 'chi-hoi-luc-ngan-luc-nam-son-dong', 'name' => 'Chi hội Lục Ngạn - Lục Nam - Sơn Động', 'description' => 'Tổ chức trực thuộc Hội tại khu vực Lục Ngạn - Lục Nam - Sơn Động.'],
+            ['slug' => 'chi-hoi-kinh-bac', 'name' => 'Chi hội Kinh Bắc', 'description' => 'Tổ chức trực thuộc Hội tại khu vực Kinh Bắc.'],
+            ['slug' => 'chi-hoi-nam-duong', 'name' => 'Chi hội Nam Đuống', 'description' => 'Tổ chức trực thuộc Hội tại khu vực Nam Đuống.'],
+            ['slug' => 'chi-hoi-tu-son', 'name' => 'Chi hội Từ Sơn', 'description' => 'Tổ chức trực thuộc Hội tại khu vực Từ Sơn.'],
+            ['slug' => 'chi-hoi-tien-du', 'name' => 'Chi hội Tiên Du', 'description' => 'Tổ chức trực thuộc Hội tại khu vực Tiên Du.'],
+            ['slug' => 'chi-hoi-yen-phong', 'name' => 'Chi hội Yên Phong', 'description' => 'Tổ chức trực thuộc Hội tại khu vực Yên Phong.'],
         ];
 
-        return collect($chapters)->mapWithKeys(fn (array $chapter, int $sortOrder): array => [
+        $ids = collect($chapters)->mapWithKeys(fn (array $chapter, int $sortOrder): array => [
             $chapter['slug'] => $this->upsert('business_chapters', ['slug' => $chapter['slug']], [
                 ...$chapter,
                 'sort_order' => ($sortOrder + 1) * 10,
                 'is_active' => true,
             ], $now),
         ])->all();
+
+        return [
+            ...$ids,
+            'chi-hoi-san-xuat-cong-nghiep' => $ids['chi-hoi-bac-giang-yen-dung'],
+            'chi-hoi-cong-nghe-doi-moi' => $ids['chi-hoi-kinh-bac'],
+            'chi-hoi-thuong-mai-dich-vu' => $ids['chi-hoi-nam-duong'],
+            'chi-hoi-ha-tang-logistics' => $ids['chi-hoi-tu-son'],
+        ];
     }
 
     /** @return array<string, int> */
@@ -337,7 +397,7 @@ class DntFoundationSeeder extends Seeder
                 'business_size' => $business['size'],
                 'phone' => '0200 000 '.str_pad((string) (1101 + $index), 4, '0', STR_PAD_LEFT),
                 'email' => 'contact'.($index + 1).'@dnt-seed.example',
-                'website' => 'https://'.str_replace('-', '', $business['slug']).'.example',
+                'website' => str_replace('-', '', $business['slug']).'.example',
                 'address' => 'Khu vực doanh nghiệp Bắc Ninh',
                 'province' => 'Bắc Ninh',
                 'district' => $index % 2 === 0 ? 'Bắc Ninh' : 'Từ Sơn',
@@ -404,11 +464,11 @@ class DntFoundationSeeder extends Seeder
                     ['from' => 'pending', 'to' => 'approved', 'reason' => 'Hồ sơ đã được Hội duyệt; người nộp được công nhận là hội viên đại diện.'],
                 ],
             }
-            : [[
-                'from' => 'pending',
-                'to' => 'approved',
-                'reason' => 'Khởi tạo dữ liệu danh bạ doanh nghiệp.',
-            ]];
+        : [[
+            'from' => 'pending',
+            'to' => 'approved',
+            'reason' => 'Khởi tạo dữ liệu danh bạ doanh nghiệp.',
+        ]];
 
         foreach ($steps as $index => $step) {
             $this->upsert('business_status_histories', [
@@ -530,6 +590,32 @@ class DntFoundationSeeder extends Seeder
         }
     }
 
+    private function seedIntros(Carbon $now): void
+    {
+        $intros = [
+            [
+                'slug' => 'gioi-thieu-hoi',
+                'title' => 'Đồng hành cùng doanh nghiệp trẻ Bắc Ninh',
+                'summary' => 'Hội là không gian kết nối để doanh nghiệp trẻ chia sẻ năng lực, cơ hội và trách nhiệm với cộng đồng.',
+                'content' => '<p>Hội Doanh nhân trẻ tỉnh Bắc Ninh hướng tới một cộng đồng doanh nghiệp trẻ năng động, minh bạch và có khả năng cùng nhau tạo ra các cơ hội phát triển bền vững.</p>',
+            ],
+            [
+                'slug' => 'co-cau-to-chuc-hoi',
+                'title' => 'Cơ cấu, tổ chức của Hội',
+                'summary' => 'Cơ cấu vận hành của Hội và các tổ chức trực thuộc.',
+                'content' => '<ol><li><strong>Đại hội</strong>: Cơ quan lãnh đạo cao nhất của Hội, nhiệm kỳ 03 năm một lần.</li><li><strong>Ban Chấp hành Hội</strong>: Cơ quan lãnh đạo của Hội giữa hai kỳ Đại hội.</li><li><strong>Ban Kiểm tra Hội</strong>: Hoạt động độc lập để kiểm tra, giám sát việc chấp hành Điều lệ và tài chính Hội.</li><li><strong>Ban Thường vụ Hội</strong>: Cơ quan thường trực lãnh đạo giữa hai kỳ họp Ban Chấp hành.</li><li><strong>Văn phòng và 09 Ban chuyên môn</strong>: Văn phòng Hội; Ban Cố vấn; Ban Truyền thông; Ban Vận động chính sách; Ban Quan hệ quốc tế; Ban Xúc tiến thương mại; Ban Hội viên; Ban Quan hệ cộng đồng; Ban Thi đua khen thưởng; Ban Thể thao.</li><li><strong>Các tổ chức thuộc Hội</strong>: 09 Chi hội trực thuộc và các câu lạc bộ.<ul><li>Chi hội Bắc Giang - Yên Dũng</li><li>Chi hội Hiệp Hòa - Việt Yên</li><li>Chi hội Yên Thế - Lạng Giang - Tân Yên</li><li>Chi hội Lục Ngạn - Lục Nam - Sơn Động</li><li>Chi hội Kinh Bắc</li><li>Chi hội Nam Đuống</li><li>Chi hội Từ Sơn</li><li>Chi hội Tiên Du</li><li>Chi hội Yên Phong</li></ul></li></ol>',
+            ],
+        ];
+
+        foreach ($intros as $sortOrder => $intro) {
+            $this->upsert('intros', ['slug' => $intro['slug']], [
+                ...$intro,
+                'is_active' => true,
+                'sort_order' => ($sortOrder + 1) * 10,
+            ], $now);
+        }
+    }
+
     private function seedNews(): void
     {
         $locale = app()->getLocale();
@@ -595,8 +681,8 @@ class DntFoundationSeeder extends Seeder
     }
 
     /**
-     * @param array<string, mixed> $identity
-     * @param array<string, mixed> $values
+     * @param  array<string, mixed>  $identity
+     * @param  array<string, mixed>  $values
      */
     private function upsert(string $table, array $identity, array $values, Carbon $now, bool $timestamps = true): int
     {

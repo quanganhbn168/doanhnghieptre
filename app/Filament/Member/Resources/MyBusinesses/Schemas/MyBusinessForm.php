@@ -5,8 +5,8 @@ namespace App\Filament\Member\Resources\MyBusinesses\Schemas;
 use Filament\Forms\Components\FileUpload;
 use Filament\Forms\Components\RichEditor;
 use Filament\Forms\Components\Select;
-use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Textarea;
+use Filament\Forms\Components\TextInput;
 use Filament\Schemas\Components\Section;
 use Filament\Schemas\Schema;
 
@@ -33,11 +33,11 @@ class MyBusinessForm
                     Select::make('business_size')->label('Quy mô')->options([
                         'small' => 'Quy mô nhỏ', 'medium' => 'Quy mô vừa', 'large' => 'Quy mô lớn',
                     ])->required(),
-                    Select::make('industries')->label('Lĩnh vực hoạt động')->relationship('industries', 'name')->multiple()->required()->minItems(1)->maxItems(5)->maxItemsMessage('Mỗi doanh nghiệp chỉ được chọn tối đa 5 lĩnh vực hoạt động.')->helperText('Chọn từ 1 đến tối đa 5 lĩnh vực; lĩnh vực đầu tiên là lĩnh vực chính.')->searchable()->preload()->columnSpanFull(),
+                    Select::make('industries')->label('Nhóm nghề nghiệp')->relationship('industries', 'name', modifyQueryUsing: fn ($query) => $query->memberGroups()->where('is_active', true))->multiple()->required()->minItems(1)->maxItems(5)->maxItemsMessage('Mỗi doanh nghiệp chỉ được chọn tối đa 5 nhóm nghề nghiệp.')->helperText('Chọn từ 1 đến tối đa 5 nhóm; nhóm đầu tiên là nhóm chính.')->searchable()->preload()->columnSpanFull(),
                     TextInput::make('representative_job_title')->label('Chức danh người đại diện')->maxLength(160),
                     TextInput::make('phone')->label('Điện thoại')->tel()->required()->maxLength(30),
                     TextInput::make('email')->label('Email')->email()->required()->maxLength(255),
-                    TextInput::make('website')->label('Website')->url()->maxLength(2048)->columnSpanFull(),
+                    TextInput::make('website')->label('Website')->maxLength(253)->dehydrateStateUsing(static fn (?string $state): ?string => $state ? rtrim((string) preg_replace('#^https?://#i', '', trim($state)), '/') : null)->columnSpanFull(),
                     Textarea::make('address')->label('Địa chỉ')->required()->rows(2)->columnSpanFull(),
                     TextInput::make('province')->label('Tỉnh / thành phố')->required()->maxLength(100),
                     TextInput::make('district')->label('Quận / huyện')->maxLength(100),

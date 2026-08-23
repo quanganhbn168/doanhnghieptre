@@ -1,22 +1,29 @@
 <?php
 
+use App\Http\Controllers\Account\BusinessApplicationController;
+use App\Http\Controllers\Account\DashboardController;
+use App\Http\Controllers\Account\DownloadBusinessMembershipApplicationController;
 use App\Http\Controllers\Auth\AuthController;
 use App\Http\Controllers\Frontend;
 use Illuminate\Support\Facades\Route;
 
-Route::middleware('auth')->prefix('tai-khoan')->as('account.')->group(function (): void {
-    Route::get('/', \App\Http\Controllers\Account\DashboardController::class)->name('dashboard');
-    Route::get('/doanh-nghiep/dang-ky', [\App\Http\Controllers\Account\BusinessApplicationController::class, 'create'])->name('businesses.create');
-    Route::post('/doanh-nghiep', [\App\Http\Controllers\Account\BusinessApplicationController::class, 'store'])->middleware('throttle:frontend-forms')->name('businesses.store');
-    Route::get('/doanh-nghiep/{business}/chinh-sua', [\App\Http\Controllers\Account\BusinessApplicationController::class, 'edit'])->name('businesses.edit');
-    Route::patch('/doanh-nghiep/{business}', [\App\Http\Controllers\Account\BusinessApplicationController::class, 'update'])->middleware('throttle:frontend-forms')->name('businesses.update');
+Route::middleware(['auth', 'account.approved'])->prefix('tai-khoan')->as('account.')->group(function (): void {
+    Route::get('/', DashboardController::class)->name('dashboard');
+    Route::get('/doanh-nghiep/dang-ky', [BusinessApplicationController::class, 'create'])->name('businesses.create');
+    Route::post('/doanh-nghiep', [BusinessApplicationController::class, 'store'])->middleware('throttle:frontend-forms')->name('businesses.store');
+    Route::get('/doanh-nghiep/{business}/chinh-sua', [BusinessApplicationController::class, 'edit'])->name('businesses.edit');
+    Route::patch('/doanh-nghiep/{business}', [BusinessApplicationController::class, 'update'])->middleware('throttle:frontend-forms')->name('businesses.update');
 });
+
+Route::get('/ho-so-doanh-nghiep/{business}/don-gia-nhap/tai-ve', DownloadBusinessMembershipApplicationController::class)
+    ->middleware('auth:web,admin')
+    ->name('business.membership-application.download');
 
 Route::get('/', [Frontend\HomeController::class, 'index'])->name('home');
 Route::get('/sitemap.xml', [Frontend\SeoController::class, 'sitemap'])->name('sitemap');
 Route::get('/robots.txt', [Frontend\SeoController::class, 'robots'])->name('robots');
 Route::get('/gioi-thieu', [Frontend\AssociationPortalController::class, 'about'])->name('about');
-Route::get('/gioi-thieu/{slug}', [Frontend\CompanyContentController::class, 'show'])->name('about.content.show');
+Route::get('/gioi-thieu/{slug}', [Frontend\AssociationPortalController::class, 'aboutShow'])->name('about.show');
 Route::get('/doanh-nghiep', [Frontend\AssociationPortalController::class, 'businesses'])->name('businesses.index');
 Route::get('/danh-ba-doanh-nghiep', [Frontend\BusinessDirectoryController::class, 'index'])->name('directory.index');
 Route::get('/su-kien', [Frontend\AssociationPortalController::class, 'events'])->name('events.index');

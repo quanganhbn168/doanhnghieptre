@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Frontend;
 
 use App\Http\Controllers\Controller;
+use App\Models\Intro;
 use App\Models\TradePost;
 use App\Services\AssociationHomeService;
 use Illuminate\Http\Request;
@@ -12,7 +13,22 @@ class AssociationPortalController extends Controller
 {
     public function about(): View
     {
-        return view('frontend.association.about');
+        $intros = Intro::query()
+            ->visibleOnSite()
+            ->orderBy('sort_order')
+            ->get();
+
+        return view('frontend.association.about', compact('intros'));
+    }
+
+    public function aboutShow(string $slug): View
+    {
+        $intro = Intro::query()
+            ->visibleOnSite()
+            ->where('slug', $slug)
+            ->firstOrFail();
+
+        return view('frontend.association.intro', compact('intro'));
     }
 
     public function businesses(AssociationHomeService $associationHome): View

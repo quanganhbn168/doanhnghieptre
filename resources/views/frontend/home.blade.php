@@ -118,7 +118,7 @@
                         @foreach($tradePosts as $tradePost)
                             <article class="dnt-trade-list__item">
                                 <span class="dnt-trade-list__icon"><i class="fa-solid {{ $tradePost->type_icon }}" aria-hidden="true"></i></span>
-                                <div><p>{{ $tradePost->type_label }}</p><h3>{{ $tradePost->title }}</h3><p>{{ $tradePost->business_name ?: $tradePost->summary }}</p></div>
+                                <div><h3>{{ $tradePost->title }}</h3><p>{{ $tradePost->business_name ?: $tradePost->summary }}</p></div>
                                 <div class="dnt-trade-list__meta"><span>{{ $tradePost->location_label ?: 'Đang cập nhật khu vực' }}</span><strong>{{ $tradePost->budget_label ?: 'Liên hệ trao đổi' }}</strong></div>
                             </article>
                         @endforeach

@@ -5,68 +5,99 @@
 @section('robots', 'noindex, nofollow')
 
 @section('content')
-    @php
-        $isEditing = $mode === 'edit';
-        $selectedIndustryIds = collect(old('industry_ids', $business->industries->modelKeys()))
-            ->map(static fn ($id): string => (string) $id)
-            ->all();
-    @endphp
+    @php($signedMembershipApplication = $business->getFirstMedia('signed_membership_application'))
     <div class="dnt-application-page">
         <div class="container mx-auto px-4 sm:px-6 lg:px-8">
             <div class="dnt-application-page__heading">
                 <a class="dnt-text-link" href="{{ route('account.dashboard') }}"><i class="fa-solid fa-arrow-left" aria-hidden="true"></i> Quay lại tài khoản</a>
-                <h1>{{ $isEditing ? 'Bổ sung hồ sơ doanh nghiệp' : 'Đăng ký doanh nghiệp' }}</h1>
+                <h1>{{ $mode === 'edit' ? 'Bổ sung hồ sơ doanh nghiệp' : 'Đăng ký doanh nghiệp' }}</h1>
                 <p>Hồ sơ được Hội kiểm tra trước khi xuất hiện trên danh bạ. Khi hồ sơ được duyệt, người đại diện nộp hồ sơ sẽ trở thành hội viên.</p>
             </div>
 
-            <form class="dnt-business-application" method="POST" action="{{ $isEditing ? route('account.businesses.update', $business) : route('account.businesses.store') }}" enctype="multipart/form-data">
+            <form class="dnt-business-application" method="POST" action="{{ $mode === 'edit' ? route('account.businesses.update', $business) : route('account.businesses.store') }}" enctype="multipart/form-data">
                 @csrf
-                @if($isEditing) @method('PATCH') @endif
+                @if($mode === 'edit') @method('PATCH') @endif
 
                 <section>
-                    <h2>Thông tin pháp lý và nhận diện</h2>
+                    <div class="dnt-business-application__section-head">
+                        <h2>Thông tin pháp lý và nhận diện</h2>
+                        <p>Thông tin này dùng để Hội đối chiếu hồ sơ doanh nghiệp.</p>
+                    </div>
                     <div class="dnt-business-application__grid">
-                        <label>Tên giao dịch <b>*</b><input class="ui-input" name="name" value="{{ old('name', $business->name) }}" required autocomplete="organization"></label>
-                        <label>Tên pháp lý<input class="ui-input" name="legal_name" value="{{ old('legal_name', $business->legal_name) }}"></label>
-                        <label>Mã số thuế <b>*</b><input class="ui-input" name="tax_code" value="{{ old('tax_code', $business->tax_code) }}" required></label>
-                        <label>Loại hình doanh nghiệp <b>*</b><select class="ui-select" name="business_type" required><option value="">Chọn loại hình</option>@foreach(['limited' => 'Công ty TNHH', 'joint_stock' => 'Công ty cổ phần', 'private' => 'Doanh nghiệp tư nhân', 'household' => 'Hộ kinh doanh', 'cooperative' => 'Hợp tác xã', 'other' => 'Loại hình khác'] as $value => $label)<option value="{{ $value }}" @selected(old('business_type', $business->business_type) === $value)>{{ $label }}</option>@endforeach</select></label>
-                        <label>Logo doanh nghiệp<input class="ui-input" name="logo" type="file" accept="image/png,image/jpeg,image/webp"><small>PNG, JPG hoặc WebP, tối đa 5 MB.</small></label>
+                        <label><span>Tên giao dịch <b>*</b></span><input class="ui-input" name="name" value="{{ old('name', $business->name) }}" required autocomplete="organization"></label>
+                        <label><span>Tên pháp lý</span><input class="ui-input" name="legal_name" value="{{ old('legal_name', $business->legal_name) }}"></label>
+                        <label><span>Mã số thuế <b>*</b></span><input class="ui-input" name="tax_code" value="{{ old('tax_code', $business->tax_code) }}" required></label>
+                        <label><span>Loại hình doanh nghiệp <b>*</b></span><select class="ui-select" name="business_type" required><option value="">Chọn loại hình</option>@foreach(['limited' => 'Công ty TNHH', 'joint_stock' => 'Công ty cổ phần', 'private' => 'Doanh nghiệp tư nhân', 'household' => 'Hộ kinh doanh', 'cooperative' => 'Hợp tác xã', 'other' => 'Loại hình khác'] as $value => $label)<option value="{{ $value }}" @selected(old('business_type', $business->business_type) === $value)>{{ $label }}</option>@endforeach</select></label>
+                        <label class="dnt-business-application__full"><span>Logo doanh nghiệp</span><input class="ui-input" name="logo" type="file" accept="image/png,image/jpeg,image/webp"><small>PNG, JPG hoặc WebP; tối đa 5 MB.</small></label>
                     </div>
                 </section>
 
                 <section>
-                    <h2>Lĩnh vực và quy mô</h2>
+                    <div class="dnt-business-application__section-head">
+                        <h2>Nhóm nghề nghiệp và quy mô</h2>
+                        <p>Chọn nhóm nghề nghiệp chính và quy mô hiện tại của doanh nghiệp.</p>
+                    </div>
                     <div class="dnt-business-application__grid">
-                        <label>Nhóm doanh nghiệp<select class="ui-select" name="business_category_id"><option value="">Chọn nhóm</option>@foreach($categories as $category)<option value="{{ $category->id }}" @selected((string) old('business_category_id', $business->business_category_id) === (string) $category->id)>{{ $category->name }}</option>@endforeach</select></label>
-                        <label class="dnt-business-application__full">Lĩnh vực hoạt động <b>*</b><select class="ui-select" name="industry_ids[]" multiple required size="6">@foreach($industries as $industry)<option value="{{ $industry->id }}" @selected(in_array((string) $industry->id, $selectedIndustryIds, true))>{{ $industry->name }}</option>@endforeach</select><small>Chọn từ 1 đến tối đa 5 lĩnh vực; lĩnh vực đầu tiên là lĩnh vực chính.</small></label>
-                        <label>Quy mô <b>*</b><select class="ui-select" name="business_size" required><option value="">Chọn quy mô</option>@foreach(['small' => 'Quy mô nhỏ', 'medium' => 'Quy mô vừa', 'large' => 'Quy mô lớn'] as $value => $label)<option value="{{ $value }}" @selected(old('business_size', $business->business_size) === $value)>{{ $label }}</option>@endforeach</select></label>
-                        <label>Chức danh của người đại diện<input class="ui-input" name="job_title" value="{{ old('job_title', $business->representative_job_title) }}" placeholder="Ví dụ: Giám đốc điều hành"></label>
+                        <label><span>Nhóm doanh nghiệp</span><select class="ui-select" name="business_category_id"><option value="">Chọn nhóm</option>@foreach($categories as $category)<option value="{{ $category->id }}" @selected((string) old('business_category_id', $business->business_category_id) === (string) $category->id)>{{ $category->name }}</option>@endforeach</select></label>
+                        <label><span>Quy mô <b>*</b></span><select class="ui-select" name="business_size" required><option value="">Chọn quy mô</option>@foreach(['small' => 'Quy mô nhỏ', 'medium' => 'Quy mô vừa', 'large' => 'Quy mô lớn'] as $value => $label)<option value="{{ $value }}" @selected(old('business_size', $business->business_size) === $value)>{{ $label }}</option>@endforeach</select></label>
+                        <label class="dnt-business-application__full"><span>Nhóm nghề nghiệp <b>*</b></span><select class="ui-select" name="industry_ids[]" multiple required size="6">@foreach($industries as $industry)<option value="{{ $industry->id }}" @selected(in_array((string) $industry->id, $selectedIndustryIds, true))>{{ $industry->name }}</option>@endforeach</select><small>Danh mục có 17 nhóm nghề nghiệp và 01 nhóm Khác. Chọn từ 1 đến tối đa 5 nhóm; nhóm đầu tiên là nhóm chính.</small></label>
+                        <label class="dnt-business-application__full"><span>Chức danh của người đại diện</span><input class="ui-input" name="job_title" value="{{ old('job_title', $business->representative_job_title) }}" placeholder="Ví dụ: Giám đốc điều hành"></label>
                     </div>
                 </section>
 
                 <section>
-                    <h2>Thông tin liên hệ</h2>
+                    <div class="dnt-business-application__section-head">
+                        <h2>Thông tin liên hệ</h2>
+                        <p>Hội dùng các thông tin này để xác minh và liên hệ khi cần.</p>
+                    </div>
                     <div class="dnt-business-application__grid">
-                        <label>Điện thoại <b>*</b><input class="ui-input" name="phone" type="tel" value="{{ old('phone', $business->phone) }}" required autocomplete="tel"></label>
-                        <label>Email doanh nghiệp <b>*</b><input class="ui-input" name="email" type="email" value="{{ old('email', $business->email) }}" required autocomplete="email"></label>
-                        <label>Website<input class="ui-input" name="website" type="url" value="{{ old('website', $business->website) }}" placeholder="https://"></label>
-                        <label>Tỉnh / thành phố <b>*</b><input class="ui-input" name="province" value="{{ old('province', $business->province) }}" required></label>
-                        <label>Quận / huyện<input class="ui-input" name="district" value="{{ old('district', $business->district) }}"></label>
-                        <label class="dnt-business-application__full">Địa chỉ <b>*</b><textarea class="ui-input" name="address" required>{{ old('address', $business->address) }}</textarea></label>
+                        <label><span>Điện thoại <b>*</b></span><input class="ui-input" name="phone" type="tel" value="{{ old('phone', $business->phone) }}" required autocomplete="tel"></label>
+                        <label><span>Email doanh nghiệp <b>*</b></span><input class="ui-input" name="email" type="email" value="{{ old('email', $business->email) }}" required autocomplete="email"></label>
+                        <label><span>Website</span><input class="ui-input" name="website" type="text" inputmode="url" autocomplete="url" value="{{ old('website', $business->website) }}" placeholder="vinhgiang.com.vn"></label>
+                        <label><span>Tỉnh / thành phố <b>*</b></span><input class="ui-input" name="province" value="{{ old('province', $business->province) }}" placeholder="Bắc Ninh hoặc tỉnh/thành phố khác" required><small>Hội viên có thể hoạt động ngoài tỉnh Bắc Ninh.</small></label>
+                        <label class="dnt-business-application__full"><span>Khu vực (quận/huyện, xã/phường)</span><input class="ui-input" name="district" value="{{ old('district', $business->district) }}" placeholder="Ví dụ: phường Kinh Bắc"></label>
+                        <label class="dnt-business-application__full"><span>Địa chỉ <b>*</b></span><textarea class="ui-input" name="address" required>{{ old('address', $business->address) }}</textarea></label>
                     </div>
                 </section>
 
                 <section>
-                    <h2>Giới thiệu ngắn</h2>
-                    <label>Doanh nghiệp đang cung cấp sản phẩm, dịch vụ hoặc năng lực gì? <b>*</b><textarea class="ui-input" name="summary" required maxlength="1000">{{ old('summary', $business->summary) }}</textarea><small>Tối đa 1.000 ký tự; nội dung này sẽ được Hội sử dụng để giới thiệu trong danh bạ.</small></label>
+                    <div class="dnt-business-application__section-head">
+                        <h2>Giới thiệu ngắn</h2>
+                        <p>Nêu sản phẩm, dịch vụ hoặc năng lực nổi bật của doanh nghiệp.</p>
+                    </div>
+                    <label><span>Thông tin giới thiệu <b>*</b></span><textarea class="ui-input" name="summary" required maxlength="1000">{{ old('summary', $business->summary) }}</textarea><small>Tối đa 1.000 ký tự; nội dung này sẽ được Hội sử dụng để giới thiệu trong danh bạ.</small></label>
+                </section>
+
+                <section class="dnt-business-application__membership-application">
+                    <div class="dnt-business-application__section-head">
+                        <h2>Đơn gia nhập Hội</h2>
+                        <p>Hoàn tất đủ ba bước trước khi gửi hồ sơ để Hội kiểm tra.</p>
+                    </div>
+                    <div class="dnt-business-application__document-grid">
+                        <div class="dnt-business-application__template">
+                            <strong>1. Tải và hoàn thiện mẫu đơn</strong>
+                            <p>In đơn, ký tên và đóng dấu doanh nghiệp trước khi quét hoặc chụp lại.</p>
+                            <a class="dnt-button dnt-button--outline-dark" href="{{ asset('downloads/don-gia-nhap-hoi-082026.docx') }}" download>Tải mẫu đơn (.docx) <i class="fa-solid fa-download" aria-hidden="true"></i></a>
+                        </div>
+                        <div class="dnt-business-application__upload">
+                            <label for="membership_application"><span>2. Tải bản đơn đã ký, đóng dấu @if(! $signedMembershipApplication)<b>*</b>@endif</span></label>
+                            <input id="membership_application" class="ui-input" name="membership_application" type="file" accept=".pdf,.jpg,.jpeg,.png,application/pdf,image/jpeg,image/png" @required(! $signedMembershipApplication)>
+                            <small>Nhận PDF, JPG hoặc PNG; tối đa 10 MB.</small>
+                            @if($signedMembershipApplication)
+                                <p>Đã nhận tệp <a class="dnt-text-link" href="{{ route('business.membership-application.download', $business) }}">{{ $signedMembershipApplication->file_name }} <i class="fa-solid fa-download" aria-hidden="true"></i></a>. Chỉ tải lại khi cần thay thế.</p>
+                            @endif
+                        </div>
+                    </div>
                 </section>
 
                 @if($errors->any())
                     <div class="ui-alert ui-alert--error"><strong>Hồ sơ chưa gửi được.</strong><ul>@foreach($errors->all() as $error)<li>{{ $error }}</li>@endforeach</ul></div>
                 @endif
 
-                <label class="dnt-business-application__confirm"><input name="confirm_information" type="checkbox" value="1" @checked(old('confirm_information')) required> <span>Tôi xác nhận thông tin doanh nghiệp là chính xác và đồng ý để Hội liên hệ xác thực.</span></label>
-                <div class="dnt-business-application__actions"><a class="dnt-button dnt-button--outline-dark" href="{{ route('account.dashboard') }}">Hủy</a><button class="dnt-button dnt-button--dark" type="submit">{{ $isEditing ? 'Gửi lại để duyệt' : 'Gửi hồ sơ doanh nghiệp' }} <i class="fa-solid fa-arrow-right" aria-hidden="true"></i></button></div>
+                <div class="dnt-business-application__footer">
+                    <label class="dnt-business-application__confirm"><input name="confirm_information" type="checkbox" value="1" @checked(old('confirm_information')) required> <span>Tôi xác nhận thông tin doanh nghiệp là chính xác và đồng ý để Hội liên hệ xác thực.</span></label>
+                    <div class="dnt-business-application__actions"><a class="dnt-button dnt-button--outline-dark" href="{{ route('account.dashboard') }}">Hủy</a><button class="dnt-button dnt-button--dark" type="submit">{{ $mode === 'edit' ? 'Gửi lại để duyệt' : 'Gửi hồ sơ doanh nghiệp' }} <i class="fa-solid fa-arrow-right" aria-hidden="true"></i></button></div>
+                </div>
             </form>
         </div>
     </div>

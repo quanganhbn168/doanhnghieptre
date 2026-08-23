@@ -24,6 +24,25 @@ if (typeof window !== 'undefined') {
   };
 
   ready(() => {
+    document.querySelectorAll('[data-password-toggle]').forEach(button => {
+      const input = document.getElementById(button.dataset.passwordToggle);
+      const label = button.querySelector('.sr-only');
+      const icon = button.querySelector('i');
+
+      if (!input) return;
+
+      button.addEventListener('click', () => {
+        const isVisible = input.type === 'text';
+
+        input.type = isVisible ? 'password' : 'text';
+        button.setAttribute('aria-pressed', String(!isVisible));
+        button.setAttribute('aria-label', isVisible ? 'Hiện mật khẩu' : 'Ẩn mật khẩu');
+        label.textContent = isVisible ? 'Hiện mật khẩu' : 'Ẩn mật khẩu';
+        icon?.classList.toggle('fa-eye', isVisible);
+        icon?.classList.toggle('fa-eye-slash', !isVisible);
+      });
+    });
+
     const mobileMenu = document.querySelector('[data-mobile-menu]');
     const mobileMenuPanel = mobileMenu?.querySelector('[data-mobile-menu-panel]');
     const mobileMenuBackdrop = mobileMenu?.querySelector('[data-mobile-menu-backdrop]');

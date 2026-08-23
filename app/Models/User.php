@@ -7,6 +7,7 @@ use Database\Factories\UserFactory;
 use Filament\Models\Contracts\FilamentUser;
 use Filament\Panel;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
@@ -35,6 +36,7 @@ class User extends Authenticatable implements FilamentUser
         'phone',
         'password',
         'is_active',
+        'approval_status',
     ];
 
     /**
@@ -55,10 +57,10 @@ class User extends Authenticatable implements FilamentUser
     public function canAccessPanel(Panel $panel): bool
     {
         if ($panel->getId() === 'member') {
-            return $this->is_active && $this->member()->where('status', 'approved')->exists();
+            return $this->hasApprovedAccount() && $this->member()->where('status', 'approved')->exists();
         }
 
-        return $this->is_active
+        return $this->hasApprovedAccount()
             && ($this->hasRole(['super_admin', 'admin'], 'admin') || $this->getAllPermissions()->isNotEmpty());
     }
 
@@ -68,7 +70,18 @@ class User extends Authenticatable implements FilamentUser
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
             'is_active' => 'boolean',
+            'account_approved_at' => 'datetime',
         ];
+    }
+
+    public function hasApprovedAccount(): bool
+    {
+        return $this->is_active && $this->approval_status === 'approved';
+    }
+
+    public function accountApprovedBy(): BelongsTo
+    {
+        return $this->belongsTo(self::class, 'account_approved_by');
     }
 
     public function canBeManagedBy(User $actor): bool

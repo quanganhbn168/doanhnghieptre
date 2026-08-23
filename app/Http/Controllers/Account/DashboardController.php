@@ -16,7 +16,7 @@ class DashboardController extends Controller
         $member = $user->member;
 
         $businesses = Business::query()
-            ->with(['category', 'chapter', 'industries'])
+            ->with(['category', 'chapter', 'industries', 'media'])
             ->withCount('members')
             ->where(function ($query) use ($user, $member): void {
                 $query->where('submitted_by_user_id', $user->id);

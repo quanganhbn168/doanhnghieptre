@@ -460,15 +460,9 @@ img { max-width: 100%; }
 .section-muted { background: var(--canvas); border-block: 1px solid var(--line); }
 .section-dark { color: #fff; background: var(--brand-dark); }
 .section-dark .section-heading-title { color: #fff; }
-.eyebrow { display: inline-block; margin-bottom: 11px; color: var(--primary); font-size: 13px; font-weight: 850; letter-spacing: .12em; text-transform: uppercase; }
-.section-dark .eyebrow,
-.detail-hero .eyebrow,
-.home-hero .eyebrow { color: var(--primary-light); }
 .text-link { color: var(--primary); font-weight: 800; }
 .text-link i { margin-left: 5px; transition: transform .2s ease; }
 .text-link:hover i { transform: translateX(4px); }
-.page-hero .eyebrow { margin-bottom: 8px; }
-
 .home-intro__grid { display: grid; grid-template-columns: minmax(0, 1.08fr) minmax(0, .92fr); gap: clamp(40px, 8vw, 120px); align-items: start; }
 .home-intro h2 { margin: 0; font-size: clamp(29px, 3.2vw, 47px); font-weight: 850; line-height: 1.18; }
 .home-intro p { color: var(--muted); font-size: 16px; line-height: 1.9; }

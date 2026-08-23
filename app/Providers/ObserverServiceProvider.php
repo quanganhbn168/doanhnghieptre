@@ -3,7 +3,6 @@
 namespace App\Providers;
 
 use App\Models\Client;
-use App\Models\CompanyContent;
 use App\Models\Page;
 use App\Models\Post;
 use App\Models\PostCategory;
@@ -36,7 +35,6 @@ class ObserverServiceProvider extends ServiceProvider
         Service::observe(SlugObserver::class);
         Project::observe(SlugObserver::class);
         Client::observe(SlugObserver::class);
-        CompanyContent::observe(SlugObserver::class);
         ServiceCategory::observe(SlugObserver::class);
         ProjectCategory::observe(SlugObserver::class);
     }

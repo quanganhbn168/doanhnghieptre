@@ -9,7 +9,7 @@
 
 @section('content')
 <section class="dnt-page-hero">
-    <div class="container mx-auto px-4 sm:px-6 lg:px-8"><p>{{ $pageTitle }}</p><h1>{{ $pageTitle }} DNT Bắc Ninh</h1><span>{{ $pageLead }}</span></div>
+    <div class="container mx-auto px-4 sm:px-6 lg:px-8"><h1>{{ $pageTitle }} DNT Bắc Ninh</h1><span>{{ $pageLead }}</span></div>
 </section>
 <section class="dnt-section dnt-section--soft">
     <div class="container mx-auto px-4 sm:px-6 lg:px-8">
@@ -36,12 +36,12 @@
                                     <span>Chưa có logo</span>
                                 @endif
                             </div>
-                            <p>{{ $item->category_name ?: 'Doanh nghiệp' }}</p><h2>{{ $item->name }}</h2><span>{{ $item->province ?: 'Bắc Ninh' }}</span><div>{{ $item->summary ?: 'Thông tin đang được cập nhật.' }}</div>
+                            <h2>{{ $item->name }}</h2><span>{{ $item->province ?: 'Bắc Ninh' }}</span><div>{{ $item->summary ?: 'Thông tin đang được cập nhật.' }}</div>
                         @elseif($itemType === 'event')
                             <span class="dnt-directory-card__icon"><i class="fa-solid fa-calendar-days" aria-hidden="true"></i></span>
-                            <p>{{ $item->date_day }} {{ $item->date_month }} {{ $item->date_year }}</p><h2>{{ $item->title }}</h2><span>{{ $item->venue_name ?: 'Đang cập nhật địa điểm' }}</span><div>{{ $item->summary ?: 'Thông tin chương trình đang được cập nhật.' }}</div>
+                            <h2>{{ $item->title }}</h2><span>{{ $item->date_day }} {{ $item->date_month }} {{ $item->date_year }} @if($item->venue_name) · {{ $item->venue_name }} @endif</span><div>{{ $item->summary ?: 'Thông tin chương trình đang được cập nhật.' }}</div>
                         @else
-                            <p>{{ $item->type_label }}</p><h2><a href="{{ route('trade.show', $item->slug) }}">{{ $item->title }}</a></h2><span>{{ $item->business_name ?: 'Doanh nghiệp hội viên' }} · {{ $item->location_label ?: 'Đang cập nhật khu vực' }}</span><div>{{ $item->summary ?: 'Thông tin giao thương đang được cập nhật.' }}</div>
+                            <h2><a href="{{ route('trade.show', $item->slug) }}">{{ $item->title }}</a></h2><span>{{ $item->business_name ?: 'Doanh nghiệp hội viên' }} · {{ $item->location_label ?: 'Đang cập nhật khu vực' }}</span><div>{{ $item->summary ?: 'Thông tin giao thương đang được cập nhật.' }}</div>
                         @endif
                     </article>
                 @endforeach

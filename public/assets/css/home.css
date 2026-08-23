@@ -22,33 +22,6 @@
     padding-block: var(--home-section-space);
 }
 
-.home-page .section-eyebrow {
-    display: inline-flex;
-    align-items: center;
-    gap: 1rem;
-    margin-bottom: 1.25rem;
-    color: var(--primary-color);
-    font-size: clamp(1.35rem, 2vw, 1.85rem);
-    font-weight: 700;
-    letter-spacing: .01em;
-    line-height: 1.05;
-    text-transform: none;
-}
-
-.home-page .section-eyebrow::before {
-    align-self: stretch;
-    flex: 0 0 .9rem;
-    width: .9rem;
-    min-height: 1.05em;
-    height: auto;
-    background: var(--accent-color);
-    content: "";
-}
-
-.home-contact .section-eyebrow {
-    color: #fff;
-}
-
 .home-page .section-title {
     margin: 0;
     color: var(--dark-color);
@@ -159,10 +132,6 @@
     box-sizing: border-box;
     min-height: 100%;
     padding-block: 7rem;
-}
-
-.home-hero__eyebrow {
-    display: none;
 }
 
 .home-hero h1,
@@ -1401,16 +1370,6 @@
 .home-contact--plain {
     color: var(--dark-color);
     background: #fff;
-}
-
-.home-contact--plain .section-eyebrow {
-    color: var(--primary-color);
-}
-
-.home-contact--plain .home-contact__intro .section-eyebrow {
-    margin-bottom: 1.5rem;
-    color: var(--dark-color);
-    font-size: clamp(1.45rem, 2.2vw, 2rem);
 }
 
 .home-contact__heading {

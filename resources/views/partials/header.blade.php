@@ -36,11 +36,21 @@
         <div class="dnt-site-header__nav-bar">
             <div class="container mx-auto px-4 sm:px-6 lg:px-8">
                 <nav class="dnt-main-nav" aria-label="Điều hướng chính">
+                    @php($aboutIntros = $aboutIntros ?? collect())
                     @if(isset($headerMenu) && $headerMenu?->items?->isNotEmpty())
                         @foreach($headerMenu->items as $item)
-                            <div class="dnt-main-nav__item {{ $item->childrenRecursive->isNotEmpty() ? 'has-children' : '' }}">
-                                <a class="{{ $item->isCurrent() || $item->hasCurrentDescendant() ? 'is-active' : '' }}" href="{{ $item->href }}">{{ $item->title }} @if($item->childrenRecursive->isNotEmpty())<i class="fa-solid fa-chevron-down" aria-hidden="true"></i>@endif</a>
-                                @if($item->childrenRecursive->isNotEmpty())
+                            @php($isAboutMenu = $item->route === 'about' || rtrim($item->href, '/') === rtrim(route('about'), '/'))
+                            @php($hasAboutDropdown = $isAboutMenu && $aboutIntros->isNotEmpty())
+                            @php($hasChildren = $hasAboutDropdown || $item->childrenRecursive->isNotEmpty())
+                            <div class="dnt-main-nav__item {{ $hasChildren ? 'has-children' : '' }}">
+                                <a class="{{ $item->isCurrent() || $item->hasCurrentDescendant() || ($isAboutMenu && request()->routeIs('about*')) ? 'is-active' : '' }}" href="{{ $item->href }}">{{ $item->title }} @if($hasChildren)<i class="fa-solid fa-chevron-down" aria-hidden="true"></i>@endif</a>
+                                @if($hasAboutDropdown)
+                                    <ul class="dnt-main-nav__dropdown">
+                                        @foreach($aboutIntros as $intro)
+                                            <li><a href="{{ route('about.show', ['slug' => $intro->slug]) }}">{{ $intro->title }}</a></li>
+                                        @endforeach
+                                    </ul>
+                                @elseif($item->childrenRecursive->isNotEmpty())
                                     <ul class="dnt-main-nav__dropdown">
                                         @foreach($item->childrenRecursive as $child)
                                             <li class="{{ $child->childrenRecursive->isNotEmpty() ? 'has-children' : '' }}">
@@ -60,7 +70,16 @@
                         @endforeach
                     @else
                         <div class="dnt-main-nav__item"><a class="{{ request()->routeIs('home') ? 'is-active' : '' }}" href="{{ route('home') }}">Trang chủ</a></div>
-                        <div class="dnt-main-nav__item has-children"><a class="{{ request()->routeIs('about*') ? 'is-active' : '' }}" href="{{ route('about') }}">Giới thiệu <i class="fa-solid fa-chevron-down" aria-hidden="true"></i></a><ul class="dnt-main-nav__dropdown"><li><a href="{{ route('about') }}">Về Hội</a></li><li><a href="{{ route('contact') }}">Liên hệ</a></li></ul></div>
+                        <div class="dnt-main-nav__item {{ $aboutIntros->isNotEmpty() ? 'has-children' : '' }}">
+                            <a class="{{ request()->routeIs('about*') ? 'is-active' : '' }}" href="{{ route('about') }}">Giới thiệu @if($aboutIntros->isNotEmpty())<i class="fa-solid fa-chevron-down" aria-hidden="true"></i>@endif</a>
+                            @if($aboutIntros->isNotEmpty())
+                                <ul class="dnt-main-nav__dropdown">
+                                    @foreach($aboutIntros as $intro)
+                                        <li><a href="{{ route('about.show', ['slug' => $intro->slug]) }}">{{ $intro->title }}</a></li>
+                                    @endforeach
+                                </ul>
+                            @endif
+                        </div>
                         <div class="dnt-main-nav__item has-children"><a class="{{ request()->routeIs('businesses.*', 'directory.*', 'account.businesses.*') ? 'is-active' : '' }}" href="{{ route('directory.index') }}">Hội viên <i class="fa-solid fa-chevron-down" aria-hidden="true"></i></a><ul class="dnt-main-nav__dropdown"><li><a href="{{ route('directory.index') }}">Danh bạ doanh nghiệp</a></li><li><a href="{{ route('home') }}#loi-ich-hoi-vien">Lợi ích hội viên</a></li><li>@auth<a href="{{ route('account.businesses.create') }}">Nộp hồ sơ doanh nghiệp</a>@else<a href="{{ route('register') }}">Đăng ký hội viên</a>@endauth</li></ul></div>
                         <div class="dnt-main-nav__item has-children"><a class="{{ request()->routeIs('businesses.*', 'trade.*') ? 'is-active' : '' }}" href="{{ route('businesses.index') }}">Doanh nghiệp <i class="fa-solid fa-chevron-down" aria-hidden="true"></i></a><ul class="dnt-main-nav__dropdown"><li><a href="{{ route('businesses.index') }}">Hoạt động doanh nghiệp</a></li><li><a href="{{ route('trade.index') }}">Cơ hội giao thương</a></li></ul></div>
                         <div class="dnt-main-nav__item"><a class="{{ request()->routeIs('events.*') ? 'is-active' : '' }}" href="{{ route('events.index') }}">Sự kiện</a></div>

@@ -2,14 +2,17 @@
 
 namespace App\Filament\Resources\Businesses\Schemas;
 
+use App\Models\Business;
 use Filament\Forms\Components\FileUpload;
+use Filament\Forms\Components\Placeholder;
 use Filament\Forms\Components\RichEditor;
 use Filament\Forms\Components\Select;
-use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Textarea;
+use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Toggle;
 use Filament\Schemas\Components\Section;
 use Filament\Schemas\Schema;
+use Illuminate\Support\HtmlString;
 
 class BusinessForm
 {
@@ -41,10 +44,10 @@ class BusinessForm
                         'medium' => 'Quy mô vừa',
                         'large' => 'Quy mô lớn',
                     ]),
-                    Select::make('industries')->label('Lĩnh vực hoạt động')->relationship('industries', 'name')->multiple()->required()->minItems(1)->maxItems(5)->maxItemsMessage('Mỗi doanh nghiệp chỉ được chọn tối đa 5 lĩnh vực hoạt động.')->helperText('Chọn từ 1 đến tối đa 5 lĩnh vực; lĩnh vực đầu tiên là lĩnh vực chính.')->searchable()->preload()->columnSpanFull(),
+                    Select::make('industries')->label('Nhóm nghề nghiệp')->relationship('industries', 'name', modifyQueryUsing: fn ($query) => $query->memberGroups()->where('is_active', true))->multiple()->required()->minItems(1)->maxItems(5)->maxItemsMessage('Mỗi doanh nghiệp chỉ được chọn tối đa 5 nhóm nghề nghiệp.')->helperText('Chọn từ 1 đến tối đa 5 nhóm; nhóm đầu tiên là nhóm chính.')->searchable()->preload()->columnSpanFull(),
                     TextInput::make('phone')->label('Điện thoại')->tel()->maxLength(30),
                     TextInput::make('email')->label('Email')->email()->maxLength(255),
-                    TextInput::make('website')->label('Website')->url()->maxLength(2048)->columnSpanFull(),
+                    TextInput::make('website')->label('Website')->maxLength(253)->dehydrateStateUsing(static fn (?string $state): ?string => $state ? rtrim((string) preg_replace('#^https?://#i', '', trim($state)), '/') : null)->columnSpanFull(),
                     Textarea::make('address')->label('Địa chỉ')->rows(2)->columnSpanFull(),
                     TextInput::make('province')->label('Tỉnh / thành phố')->maxLength(100),
                     TextInput::make('district')->label('Quận / huyện')->maxLength(100),
@@ -56,6 +59,23 @@ class BusinessForm
                 ->icon('heroicon-o-adjustments-horizontal')
                 ->schema([
                     Toggle::make('is_featured')->label('Doanh nghiệp nổi bật')->default(false),
+                ]),
+            Section::make('Đơn gia nhập Hội')
+                ->schema([
+                    Placeholder::make('signed_membership_application')
+                        ->label('Bản đơn đã ký, đóng dấu')
+                        ->content(function (?Business $record): HtmlString|string {
+                            $document = $record?->getFirstMedia('signed_membership_application');
+
+                            if (! $document) {
+                                return 'Chưa tải lên.';
+                            }
+
+                            $url = route('business.membership-application.download', $record);
+
+                            return new HtmlString('<a href="'.e($url).'" target="_blank" rel="noopener">Tải '.e($document->file_name).'</a>');
+                        })
+                        ->columnSpanFull(),
                 ]),
         ]);
     }

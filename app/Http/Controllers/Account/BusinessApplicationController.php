@@ -2,35 +2,38 @@
 
 namespace App\Http\Controllers\Account;
 
+use App\Actions\BusinessApplications\StoreSignedMembershipApplication;
 use App\Http\Controllers\Controller;
 use App\Models\Business;
 use App\Models\BusinessCategory;
 use App\Models\Industry;
-use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
+use Illuminate\Validation\Rules\File;
 use Illuminate\View\View;
 
 class BusinessApplicationController extends Controller
 {
     public function create(Request $request): View
     {
+        $business = new Business([
+            'email' => $request->user()->email,
+            'phone' => $request->user()->phone,
+        ]);
+
         return view('account.business-form', [
-            'business' => new Business([
-                'email' => $request->user()->email,
-                'phone' => $request->user()->phone,
-                'province' => 'Bắc Ninh',
-            ]),
+            'business' => $business,
             'categories' => $this->categories(),
             'industries' => $this->industries(),
+            'selectedIndustryIds' => collect($request->old('industry_ids', []))->map(static fn ($id): string => (string) $id)->all(),
             'mode' => 'create',
         ]);
     }
 
-    public function store(Request $request): RedirectResponse
+    public function store(Request $request, StoreSignedMembershipApplication $storeSignedMembershipApplication): RedirectResponse
     {
         $data = $this->validated($request);
         $user = $request->user();
@@ -63,6 +66,9 @@ class BusinessApplicationController extends Controller
         });
 
         $this->syncLogo($request, $business);
+        if ($request->hasFile('membership_application')) {
+            $storeSignedMembershipApplication($business, $request->file('membership_application'));
+        }
 
         return to_route('account.dashboard')->with('success', 'Hồ sơ doanh nghiệp đã được gửi. Hội sẽ kiểm tra và phản hồi trên trang này.');
     }
@@ -72,15 +78,18 @@ class BusinessApplicationController extends Controller
         $this->ensureCanManage($request, $business);
         $this->ensureEditable($business);
 
+        $business->load('industries');
+
         return view('account.business-form', [
-            'business' => $business->load('industries'),
+            'business' => $business,
             'categories' => $this->categories(),
             'industries' => $this->industries(),
+            'selectedIndustryIds' => collect($request->old('industry_ids', $business->industries->modelKeys()))->map(static fn ($id): string => (string) $id)->all(),
             'mode' => 'edit',
         ]);
     }
 
-    public function update(Request $request, Business $business): RedirectResponse
+    public function update(Request $request, Business $business, StoreSignedMembershipApplication $storeSignedMembershipApplication): RedirectResponse
     {
         $this->ensureCanManage($request, $business);
         $this->ensureEditable($business);
@@ -95,6 +104,9 @@ class BusinessApplicationController extends Controller
         });
 
         $this->syncLogo($request, $business);
+        if ($request->hasFile('membership_application')) {
+            $storeSignedMembershipApplication($business, $request->file('membership_application'));
+        }
 
         return to_route('account.dashboard')->with('success', 'Hồ sơ đã được gửi lại để Hội duyệt.');
     }
@@ -106,11 +118,23 @@ class BusinessApplicationController extends Controller
 
     private function industries()
     {
-        return Industry::query()->where('is_active', true)->orderBy('sort_order')->orderBy('name')->get(['id', 'name']);
+        return Industry::query()
+            ->memberGroups()
+            ->where('is_active', true)
+            ->orderBy('sort_order')
+            ->orderBy('name')
+            ->get(['id', 'name']);
     }
 
     private function validated(Request $request, ?Business $business = null): array
     {
+        $website = trim((string) $request->input('website', ''));
+        if ($website !== '') {
+            $request->merge([
+                'website' => rtrim((string) preg_replace('#^https?://#i', '', $website), '/'),
+            ]);
+        }
+
         return $request->validate([
             'name' => ['required', 'string', 'max:255'],
             'legal_name' => ['nullable', 'string', 'max:255'],
@@ -119,22 +143,30 @@ class BusinessApplicationController extends Controller
             'business_size' => ['required', Rule::in(['small', 'medium', 'large'])],
             'business_category_id' => ['nullable', Rule::exists('business_categories', 'id')->where('is_active', true)],
             'industry_ids' => ['required', 'array', 'min:1', 'max:5'],
-            'industry_ids.*' => ['required', 'integer', 'distinct', Rule::exists('industries', 'id')->where('is_active', true)],
+            'industry_ids.*' => ['required', 'integer', 'distinct', Rule::exists('industries', 'id')->where('is_active', true)->where('is_member_group', true)],
             'phone' => ['required', 'string', 'max:30'],
             'email' => ['required', 'email', 'max:255'],
-            'website' => ['nullable', 'url', 'max:2048'],
+            'website' => ['nullable', 'string', 'max:253', 'regex:/^(?=.{1,253}$)(?:[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\.)+[a-z]{2,63}$/i'],
             'address' => ['required', 'string', 'max:500'],
             'province' => ['required', 'string', 'max:100'],
             'district' => ['nullable', 'string', 'max:100'],
             'summary' => ['required', 'string', 'max:1000'],
             'job_title' => ['nullable', 'string', 'max:160'],
             'logo' => ['nullable', 'image', 'max:5120'],
+            'membership_application' => [
+                $business?->hasMedia('signed_membership_application') ? 'nullable' : 'required',
+                'file',
+                File::types(['pdf', 'jpg', 'jpeg', 'png'])->max('10mb'),
+            ],
             'confirm_information' => ['accepted'],
         ], [
             'confirm_information.accepted' => 'Anh/chị cần xác nhận thông tin đã khai là chính xác.',
-            'industry_ids.required' => 'Anh/chị cần chọn ít nhất một lĩnh vực hoạt động.',
-            'industry_ids.min' => 'Anh/chị cần chọn ít nhất một lĩnh vực hoạt động.',
-            'industry_ids.max' => 'Mỗi doanh nghiệp chỉ được chọn tối đa 5 lĩnh vực hoạt động.',
+            'industry_ids.required' => 'Anh/chị cần chọn ít nhất một nhóm nghề nghiệp.',
+            'industry_ids.min' => 'Anh/chị cần chọn ít nhất một nhóm nghề nghiệp.',
+            'industry_ids.max' => 'Mỗi doanh nghiệp chỉ được chọn tối đa 5 nhóm nghề nghiệp.',
+            'website.regex' => 'Website không đúng định dạng.',
+            'membership_application.required' => 'Anh/chị cần tải lên bản đơn gia nhập Hội đã ký và đóng dấu.',
+            'membership_application.file' => 'Bản đơn gia nhập Hội phải là tệp hợp lệ.',
         ]);
     }
 
@@ -163,7 +195,7 @@ class BusinessApplicationController extends Controller
     {
         $ids = array_values(array_unique(array_map('intval', $industryIds)));
 
-        abort_if(count($ids) > 5, 422, 'Mỗi doanh nghiệp được chọn tối đa 5 lĩnh vực hoạt động.');
+        abort_if(count($ids) > 5, 422, 'Mỗi doanh nghiệp được chọn tối đa 5 nhóm nghề nghiệp.');
 
         $business->industries()->sync(
             collect($ids)->mapWithKeys(fn (int $id, int $index): array => [

@@ -84,6 +84,9 @@
                                 @elseif($business->status === 'pending')
                                     <p class="dnt-account-business-card__notice">Hồ sơ đã gửi và đang được Hội kiểm tra.</p>
                                 @endif
+                                @if($signedMembershipApplication = $business->getFirstMedia('signed_membership_application'))
+                                    <p class="dnt-account-business-card__notice">Đơn gia nhập Hội: <a class="dnt-text-link" href="{{ route('business.membership-application.download', $business) }}">{{ $signedMembershipApplication->file_name }} <i class="fa-solid fa-download" aria-hidden="true"></i></a></p>
+                                @endif
                             </div>
                             <div class="dnt-account-business-card__actions">
                                 @if($business->status === 'rejected' || $business->status === 'draft')

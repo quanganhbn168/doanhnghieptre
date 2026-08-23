@@ -12,8 +12,8 @@
     @endif
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
-@php($authBackground = $siteAssets?->getFirstMediaUrl('auth_background'))
-<body class="dnt-auth-page" @if($authBackground) style="--dnt-auth-background: url('{{ $authBackground }}')" @endif>
+@php($authBackground = $siteAssets?->getFirstMediaUrl('auth_background') ?: asset('media/4/dnt-auth-community-background.png'))
+<body class="dnt-auth-page" style="--dnt-auth-background: url('{{ $authBackground }}')">
     <div class="dnt-auth-page__scene" aria-hidden="true"></div>
     <main class="dnt-auth-page__main">
         <section class="dnt-auth-card" aria-labelledby="dnt-auth-title">

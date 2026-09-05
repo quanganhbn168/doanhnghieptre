@@ -44,25 +44,64 @@ class AssociationPortalController extends Controller
         ]);
     }
 
-    public function events(AssociationHomeService $associationHome): View
+    public function events(Request $request): View
     {
-        return view('frontend.association.index', [
-            'pageTitle' => 'Sự kiện',
-            'pageLead' => 'Các chương trình kết nối, chia sẻ và xúc tiến thương mại sắp diễn ra.',
-            'pageIcon' => 'fa-calendar-days',
-            'itemType' => 'event',
-            'items' => $associationHome->events(24),
+        $filters = $request->validate([
+            'period' => ['nullable', 'string', 'in:upcoming,past'],
+            'q' => ['nullable', 'string', 'max:100'],
         ]);
+        $period = $filters['period'] ?? 'upcoming';
+        $search = trim($filters['q'] ?? '');
+        $query = Event::query()->publiclyVisible()
+            ->when($search !== '', fn ($query) => $query->where(fn ($events) => $events
+                ->where('title', 'like', '%'.$search.'%')->orWhere('summary', 'like', '%'.$search.'%')
+                ->orWhere('venue_name', 'like', '%'.$search.'%')));
+        $upcomingCount = (clone $query)->ongoingOrUpcoming()->count();
+        $pastCount = (clone $query)->past()->count();
+        $events = $query->when($period === 'past', fn ($query) => $query->past()->orderByDesc('starts_at'),
+            fn ($query) => $query->ongoingOrUpcoming()->orderBy('starts_at'))
+            ->orderBy('id')
+            ->withSum(['registrations as registered_slots' => fn ($query) => $query->where('status', 'registered')], DB::raw('guest_count + 1'))
+            ->paginate(10)->withQueryString()
+            ->through(fn (Event $event) => ['event' => $event, ...$this->eventParticipation($event, (int) $event->registered_slots)]);
+        $breadcrumbs = [['label' => 'Trang chủ', 'url' => route('home')], ['label' => 'Sự kiện']];
+
+        return view('frontend.association.events', compact('events', 'period', 'search', 'upcomingCount', 'pastCount', 'breadcrumbs'));
     }
 
     public function eventShow(string $slug): View
     {
         $event = Event::query()->publiclyVisible()->where('slug', $slug)->firstOrFail();
         $registeredSlots = (int) $event->registrations()->where('status', 'registered')->sum(DB::raw('guest_count + 1'));
+        $breadcrumbs = [
+            ['label' => 'Trang chủ', 'url' => route('home')],
+            ['label' => 'Sự kiện', 'url' => route('events.index')],
+            ['label' => $event->title],
+        ];
+
+        return view('frontend.association.event-detail', [...compact('event', 'breadcrumbs'), ...$this->eventParticipation($event, $registeredSlots)]);
+    }
+
+    private function eventParticipation(Event $event, int $registeredSlots): array
+    {
         $remainingSlots = $event->capacity ? max(0, $event->capacity - $registeredSlots) : null;
         $registrationIsOpen = $event->registrationIsOpen() && ($remainingSlots === null || $remainingSlots > 0);
+        $phase = ($event->ends_at ?? $event->starts_at)->lt(now()) ? 'past' : ($event->starts_at->lte(now()) ? 'ongoing' : 'upcoming');
+        $phaseLabel = match ($phase) {
+            'past' => 'Đã diễn ra',
+            'ongoing' => 'Đang diễn ra',
+            default => 'Sắp diễn ra',
+        };
+        $registrationMessage = match (true) {
+            $phase === 'past' => 'Sự kiện đã kết thúc. Hẹn gặp anh/chị tại các chương trình tiếp theo của Hội.',
+            $phase === 'ongoing' => 'Chương trình đang diễn ra và đã ngừng nhận đăng ký trực tuyến.',
+            $remainingSlots === 0 => 'Sự kiện đã đủ số lượng đăng ký.',
+            $event->registration_opens_at?->isFuture() === true => 'Mở đăng ký lúc '.$event->registration_opens_at->format('H:i · d/m/Y').'.',
+            $registrationIsOpen => 'Vui lòng điền thông tin để đăng ký tham dự chương trình.',
+            default => 'Đã hết thời gian đăng ký tham dự sự kiện này.',
+        };
 
-        return view('frontend.association.event-detail', compact('event', 'remainingSlots', 'registrationIsOpen'));
+        return compact('remainingSlots', 'registrationIsOpen', 'phase', 'phaseLabel', 'registrationMessage');
     }
 
     public function trade(Request $request): View

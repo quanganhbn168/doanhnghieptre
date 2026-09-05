@@ -39,4 +39,14 @@ class Event extends Model
             && (! $this->registration_opens_at || $this->registration_opens_at->lte(now()))
             && (! $this->registration_closes_at || $this->registration_closes_at->gt(now()));
     }
+
+    public function scopeOngoingOrUpcoming(Builder $query): Builder
+    {
+        return $query->whereRaw('COALESCE(ends_at, starts_at) >= ?', [now()]);
+    }
+
+    public function scopePast(Builder $query): Builder
+    {
+        return $query->whereRaw('COALESCE(ends_at, starts_at) < ?', [now()]);
+    }
 }

@@ -64,23 +64,28 @@
     <section class="dnt-section dnt-section--soft" id="doanh-nghiep" aria-labelledby="dnt-business-title">
         <div class="container mx-auto px-4 sm:px-6 lg:px-8">
             <div class="dnt-section-heading">
-                <h2 id="dnt-business-title">Các lĩnh vực hoạt động</h2>
+                <h2 id="dnt-business-title">Khối ngành nghề</h2>
                 <a class="dnt-text-link" href="{{ route('directory.index') }}">Xem danh bạ <i class="fa-solid fa-arrow-right" aria-hidden="true"></i></a>
             </div>
             @if($activityFields->isNotEmpty())
                 <div class="dnt-activity-grid">
                     @foreach($activityFields as $field)
                         <a class="dnt-activity-card" href="{{ route('directory.index', ['industry' => $field->slug]) }}">
-                            <img src="{{ asset($field->image) }}" alt="{{ $field->name }}" loading="lazy" width="800" height="600">
+                            @if($field->image_url)
+                                <img src="{{ $field->image_url }}" alt="" loading="lazy" width="96" height="96">
+                            @else
+                                <span class="dnt-activity-card__icon" aria-hidden="true"><i class="fa-solid fa-building"></i></span>
+                            @endif
                             <span class="dnt-activity-card__content">
                                 <strong>{{ $field->name }}</strong>
                                 <small>{{ number_format($field->business_count) }} doanh nghiệp</small>
                             </span>
+                            <i class="fa-solid fa-arrow-right dnt-activity-card__arrow" aria-hidden="true"></i>
                         </a>
                     @endforeach
                 </div>
             @else
-                <div class="dnt-empty-card"><i class="fa-solid fa-building-circle-check" aria-hidden="true"></i><div><h3>Lĩnh vực hoạt động đang được cập nhật</h3><p>Danh bạ doanh nghiệp sẽ sớm hiển thị theo từng lĩnh vực.</p></div></div>
+                <div class="dnt-empty-card"><i class="fa-solid fa-building-circle-check" aria-hidden="true"></i><div><h3>Khối ngành nghề đang được cập nhật</h3><p>Danh bạ doanh nghiệp sẽ sớm hiển thị theo từng khối ngành nghề.</p></div></div>
             @endif
         </div>
     </section>

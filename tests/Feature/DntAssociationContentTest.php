@@ -26,13 +26,14 @@ class DntAssociationContentTest extends TestCase
         Storage::fake('public_media');
     }
 
-    public function test_foundation_data_contains_nine_active_chapters_and_eighteen_professional_groups(): void
+    public function test_foundation_data_contains_nine_active_chapters_and_seventeen_professional_groups(): void
     {
         $this->seed(DntFoundationSeeder::class);
 
         $this->assertSame(9, BusinessChapter::query()->where('is_active', true)->count());
-        $this->assertSame(18, Industry::query()->memberGroups()->where('is_active', true)->count());
-        $this->assertTrue(Industry::query()->memberGroups()->where('slug', 'khac')->exists());
+        $this->assertSame(17, Industry::query()->memberGroups()->where('is_active', true)->count());
+        $this->assertTrue(Industry::query()->memberGroups()->where('slug', 'khoi-khu-cong-nghiep')->exists());
+        $this->assertFalse(Industry::query()->memberGroups()->where('slug', 'khac')->exists());
         $this->assertSame('approved', User::query()->where('email', 'hoi-vien.demo@dnt-seed.example')->value('approval_status'));
         $this->assertSame(0, Business::query()->where('status', 'approved')->whereNull('membership_code')->count());
     }
@@ -108,7 +109,7 @@ class DntAssociationContentTest extends TestCase
             ->get(route('membership.create'))
             ->assertOk()
             ->assertSee('Đăng ký hội viên')
-            ->assertSee('Nhóm nghề nghiệp')
+            ->assertSee('Khối ngành nghề')
             ->assertSee(asset('downloads/don-gia-nhap-hoi-082026.docx'), false)
             ->assertSee('Tải bản đơn đã ký, đóng dấu');
 
@@ -165,9 +166,9 @@ class DntAssociationContentTest extends TestCase
 
         $this->actingAs($admin, 'admin')->get('/admin/intros')->assertOk()->assertSee('Tiêu đề');
         $this->actingAs($admin, 'admin')->get('/admin/intros/create')->assertOk()->assertSee('Tiêu đề')->assertDontSee('Loại nội dung');
-        $this->actingAs($admin, 'admin')->get('/admin/professional-groups')->assertOk()->assertSee('Nhóm nghề nghiệp');
+        $this->actingAs($admin, 'admin')->get('/admin/professional-groups')->assertOk()->assertSee('Khối ngành nghề');
         $this->actingAs($admin, 'admin')->get('/admin/business-chapters')->assertOk()->assertSee('Chi hội');
         $this->actingAs($admin, 'admin')->get('/admin/account-approvals')->assertOk();
-        $this->actingAs($admin, 'admin')->get('/admin/businesses/create')->assertOk()->assertSee('Nhóm nghề nghiệp');
+        $this->actingAs($admin, 'admin')->get('/admin/businesses/create')->assertOk()->assertSee('Khối ngành nghề');
     }
 }

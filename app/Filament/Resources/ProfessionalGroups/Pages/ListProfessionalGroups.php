@@ -12,6 +12,6 @@ class ListProfessionalGroups extends ListRecords
 
     protected function getHeaderActions(): array
     {
-        return [CreateAction::make()->label('Thêm nhóm nghề nghiệp')];
+        return [CreateAction::make()->label('Thêm khối ngành nghề')];
     }
 }

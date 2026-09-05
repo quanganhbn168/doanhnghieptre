@@ -2,6 +2,7 @@
 
 namespace App\Filament\Member\Resources\MyBusinesses\Schemas;
 
+use App\Filament\Resources\ProfessionalGroups\Schemas\ProfessionalGroupSelect;
 use Filament\Forms\Components\FileUpload;
 use Filament\Forms\Components\RichEditor;
 use Filament\Forms\Components\Select;
@@ -33,7 +34,7 @@ class MyBusinessForm
                     Select::make('business_size')->label('Quy mô')->options([
                         'small' => 'Quy mô nhỏ', 'medium' => 'Quy mô vừa', 'large' => 'Quy mô lớn',
                     ])->required(),
-                    Select::make('industries')->label('Nhóm nghề nghiệp')->relationship('industries', 'name', modifyQueryUsing: fn ($query) => $query->memberGroups()->where('is_active', true))->multiple()->required()->minItems(1)->maxItems(5)->maxItemsMessage('Mỗi doanh nghiệp chỉ được chọn tối đa 5 nhóm nghề nghiệp.')->helperText('Chọn từ 1 đến tối đa 5 nhóm; nhóm đầu tiên là nhóm chính.')->searchable()->preload()->columnSpanFull(),
+                    ProfessionalGroupSelect::make()->columnSpanFull(),
                     TextInput::make('representative_job_title')->label('Chức danh người đại diện')->maxLength(160),
                     TextInput::make('phone')->label('Điện thoại')->tel()->required()->maxLength(30),
                     TextInput::make('email')->label('Email')->email()->required()->maxLength(255),

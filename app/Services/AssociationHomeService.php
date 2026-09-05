@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Models\Industry;
 use App\Models\TradePost;
 use App\Settings\HomepageSettings;
 use Carbon\Carbon;
@@ -49,7 +50,7 @@ class AssociationHomeService
     public function home(): array
     {
         return [
-            'activityFields' => $this->activityFields(6),
+            'activityFields' => $this->activityFields(),
             'memberBenefitTitle' => $this->memberBenefitTitle(),
             'memberBenefits' => $this->memberBenefits(),
             'upcomingEvents' => $this->events(3, true),
@@ -129,34 +130,24 @@ class AssociationHomeService
             ->map(fn (object $business): object => $this->presentBusiness($business));
     }
 
-    public function activityFields(int $limit = 12): Collection
+    public function activityFields(?int $limit = null): Collection
     {
         if (! Schema::hasTable('industries') || ! Schema::hasTable('business_industries') || ! Schema::hasTable('businesses')) {
             return collect();
         }
 
-        return DB::table('industries')
-            ->join('business_industries', 'industries.id', '=', 'business_industries.industry_id')
-            ->join('businesses', function ($join): void {
-                $join->on('business_industries.business_id', '=', 'businesses.id')
-                    ->where('businesses.status', '=', 'approved');
-            })
-            ->where('industries.is_active', true)
-            ->select([
-                'industries.name',
-                'industries.slug',
-                'industries.description',
-                DB::raw('count(distinct businesses.id) as business_count'),
-            ])
-            ->groupBy('industries.id', 'industries.name', 'industries.slug', 'industries.description')
-            ->orderByDesc('business_count')
-            ->orderBy('industries.name')
-            ->limit($limit)
+        return Industry::query()->memberGroups()->where('is_active', true)->where('show_on_home', true)
+            ->with('image')
+            ->withCount(['businesses as business_count' => fn ($query) => $query->where('status', 'approved')])
+            ->orderBy('sort_order')->orderBy('name')
+            ->when($limit !== null, fn ($query) => $query->limit($limit))
             ->get()
-            ->map(fn (object $industry): object => (object) [
-                ...get_object_vars($industry),
-                'icon' => $this->activityFieldIcon($industry->slug),
-                'image' => $this->activityFieldImage($industry->slug),
+            ->map(fn (Industry $industry): object => (object) [
+                'name' => $industry->name,
+                'slug' => $industry->slug,
+                'description' => $industry->description,
+                'business_count' => $industry->business_count,
+                'image_url' => $industry->image?->url,
             ]);
     }
 
@@ -255,19 +246,6 @@ class AssociationHomeService
         return $event;
     }
 
-    private function activityFieldIcon(string $slug): string
-    {
-        return match (true) {
-            str_contains($slug, 'cong-nghe') || str_contains($slug, 'phan-mem') || str_contains($slug, 'dien-tu') || str_contains($slug, 'tu-dong-hoa') => 'fa-microchip',
-            str_contains($slug, 'logistics') || str_contains($slug, 'van-tai') || str_contains($slug, 'xuat-nhap') => 'fa-truck-fast',
-            str_contains($slug, 'xay-dung') || str_contains($slug, 'vat-lieu') => 'fa-compass-drafting',
-            str_contains($slug, 'nong-nghiep') || str_contains($slug, 'thuc-pham') => 'fa-seedling',
-            str_contains($slug, 'tai-chinh') || str_contains($slug, 'tu-van') => 'fa-chart-pie',
-            str_contains($slug, 'giao-duc') || str_contains($slug, 'dao-tao') => 'fa-graduation-cap',
-            default => 'fa-industry',
-        };
-    }
-
     private function presentBusiness(object $business): object
     {
         $business->logo_url = $this->mediaUrl(
@@ -286,17 +264,5 @@ class AssociationHomeService
         }
 
         return Storage::disk(filled($disk) ? (string) $disk : 'public_media')->url($id.'/'.$fileName);
-    }
-
-    private function activityFieldImage(string $slug): string
-    {
-        return match (true) {
-            str_contains($slug, 'cong-nghe') || str_contains($slug, 'phan-mem') || str_contains($slug, 'dien-tu') || str_contains($slug, 'tu-dong-hoa') => 'assets/images/home-demo/camera.jpg',
-            str_contains($slug, 'logistics') || str_contains($slug, 'van-tai') || str_contains($slug, 'xuat-nhap') => 'assets/images/home-demo/factory.jpg',
-            str_contains($slug, 'xay-dung') || str_contains($slug, 'vat-lieu') => 'assets/images/home-demo/factory.jpg',
-            str_contains($slug, 'nong-nghiep') || str_contains($slug, 'thuc-pham') => 'assets/images/home-demo/product.jpg',
-            str_contains($slug, 'giao-duc') || str_contains($slug, 'dao-tao') => 'assets/images/home-demo/classroom.jpg',
-            default => 'assets/images/home-demo/team.jpg',
-        };
     }
 }

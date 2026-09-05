@@ -33,13 +33,14 @@
 
                 <section>
                     <div class="dnt-business-application__section-head">
-                        <h2>Nhóm nghề nghiệp và quy mô</h2>
-                        <p>Chọn nhóm nghề nghiệp chính và quy mô hiện tại của doanh nghiệp.</p>
+                        <h2>Khối ngành nghề và quy mô</h2>
+                        @if(filled($legacyIndustryNames ?? null))<p>Phân loại cũ: {{ $legacyIndustryNames }}. Anh/chị vui lòng chọn lại theo danh mục khối ngành nghề hiện tại.</p>@endif
+                        <p>Chọn khối ngành nghề chính và quy mô hiện tại của doanh nghiệp.</p>
                     </div>
                     <div class="dnt-business-application__grid">
                         <label><span>Nhóm doanh nghiệp</span><select class="ui-select" name="business_category_id"><option value="">Chọn nhóm</option>@foreach($categories as $category)<option value="{{ $category->id }}" @selected((string) old('business_category_id', $business->business_category_id) === (string) $category->id)>{{ $category->name }}</option>@endforeach</select></label>
                         <label><span>Quy mô <b>*</b></span><select class="ui-select" name="business_size" required><option value="">Chọn quy mô</option>@foreach(['small' => 'Quy mô nhỏ', 'medium' => 'Quy mô vừa', 'large' => 'Quy mô lớn'] as $value => $label)<option value="{{ $value }}" @selected(old('business_size', $business->business_size) === $value)>{{ $label }}</option>@endforeach</select></label>
-                        <label class="dnt-business-application__full"><span>Nhóm nghề nghiệp <b>*</b></span><select class="ui-select" name="industry_ids[]" multiple required size="6">@foreach($industries as $industry)<option value="{{ $industry->id }}" @selected(in_array((string) $industry->id, $selectedIndustryIds, true))>{{ $industry->name }}</option>@endforeach</select><small>Chọn từ 1 đến tối đa 5 nhóm; nhóm đầu tiên là nhóm chính.</small></label>
+                        <label class="dnt-business-application__full"><span>Khối ngành nghề <b>*</b></span><select class="ui-select" name="industry_ids[]" multiple required size="6">@foreach($industries as $industry)<option value="{{ $industry->id }}" @selected(in_array((string) $industry->id, $selectedIndustryIds, true))>{{ $industry->name }}</option>@endforeach</select><small>Chọn từ 1 đến tối đa 5 khối; khối đầu tiên là khối chính.</small></label>
                         <label class="dnt-business-application__full"><span>Chi hội mong muốn tham gia</span><select class="ui-select" name="business_chapter_id"><option value="">Để Hội phân công Chi hội phù hợp</option>@foreach($chapters as $chapter)<option value="{{ $chapter->id }}" @selected((string) old('business_chapter_id', $business->business_chapter_id) === (string) $chapter->id)>{{ $chapter->name }}</option>@endforeach</select><small>Hội xác nhận Chi hội tiếp nhận khi duyệt hồ sơ.</small></label>
                     </div>
                 </section>

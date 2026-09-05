@@ -1,0 +1,109 @@
+{
+  "source_url": "https://doanhnhantrebacninh.com/danh-ba",
+  "verified_against": "https://doanhnhantrebacninh.com/#co-cau",
+  "retrieved_on": "2026-09-05",
+  "groups": [
+    {
+      "order": 1,
+      "slug": "khoi-khu-cong-nghiep",
+      "name": "Khối khu công nghiệp, cụm công nghiệp",
+      "description": null
+    },
+    {
+      "order": 2,
+      "slug": "khoi-tai-che",
+      "name": "Khối tái chế, tái sử dụng",
+      "description": null
+    },
+    {
+      "order": 3,
+      "slug": "khoi-vlxd-thi-cong",
+      "name": "Khối VLXD và thi công",
+      "description": null
+    },
+    {
+      "order": 4,
+      "slug": "khoi-ket-cau-thep",
+      "name": "Khối kết cấu thép",
+      "description": null
+    },
+    {
+      "order": 5,
+      "slug": "khoi-do-go-my-nghe",
+      "name": "Khối sản xuất đồ gỗ mỹ nghệ và mua bán nguyên liệu gỗ",
+      "description": null
+    },
+    {
+      "order": 6,
+      "slug": "khoi-dien-pccc",
+      "name": "Khối điện và PCCC",
+      "description": null
+    },
+    {
+      "order": 7,
+      "slug": "khoi-ban-buon-ban-le",
+      "name": "Khối siêu thị, bán buôn, bán lẻ",
+      "description": null
+    },
+    {
+      "order": 8,
+      "slug": "khoi-dich-vu-logistic",
+      "name": "Khối dịch vụ và logistic",
+      "description": null
+    },
+    {
+      "order": 9,
+      "slug": "khoi-the-thao-suc-khoe",
+      "name": "Khối dịch vụ thể thao và chăm sóc sức khỏe",
+      "description": null
+    },
+    {
+      "order": 10,
+      "slug": "khoi-chuyen-doi-so-ai",
+      "name": "Khối chuyển đổi số và trí tuệ nhân tạo",
+      "description": null
+    },
+    {
+      "order": 11,
+      "slug": "khoi-nang-luong",
+      "name": "Khối năng lượng",
+      "description": null
+    },
+    {
+      "order": 12,
+      "slug": "khoi-bat-dong-san",
+      "name": "Khối bất động sản",
+      "description": "Khách sạn, chung cư, khu thương mại dịch vụ, nhà ở xã hội và khu đô thị"
+    },
+    {
+      "order": 13,
+      "slug": "khoi-moi-truong",
+      "name": "Khối môi trường",
+      "description": null
+    },
+    {
+      "order": 14,
+      "slug": "khoi-san-xuat",
+      "name": "Khối sản xuất",
+      "description": null
+    },
+    {
+      "order": 15,
+      "slug": "khoi-y-te",
+      "name": "Khối y tế",
+      "description": null
+    },
+    {
+      "order": 16,
+      "slug": "khoi-giao-duc-nhan-luc",
+      "name": "Khối giáo dục và phát triển nhân lực",
+      "description": null
+    },
+    {
+      "order": 17,
+      "slug": "khoi-nong-lam-nghiep",
+      "name": "Khối nông, lâm nghiệp",
+      "description": null
+    }
+  ]
+}

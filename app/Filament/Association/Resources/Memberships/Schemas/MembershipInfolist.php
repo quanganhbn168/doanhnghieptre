@@ -24,7 +24,7 @@ class MembershipInfolist
                 TextEntry::make('approved_at')->label('Ngày kết nạp')->dateTime('d/m/Y H:i')->placeholder('Chưa tiếp nhận'),
                 TextEntry::make('business_type')->label('Loại hình')->formatStateUsing(fn (?string $state) => ['limited' => 'Công ty TNHH', 'joint_stock' => 'Công ty cổ phần', 'private' => 'Doanh nghiệp tư nhân', 'household' => 'Hộ kinh doanh', 'cooperative' => 'Hợp tác xã', 'other' => 'Khác'][$state] ?? $state),
                 TextEntry::make('business_size')->label('Quy mô')->formatStateUsing(fn (?string $state) => ['small' => 'Nhỏ', 'medium' => 'Vừa', 'large' => 'Lớn'][$state] ?? $state),
-                TextEntry::make('industries.name')->label('Nhóm nghề nghiệp')->listWithLineBreaks()->columnSpanFull(),
+                TextEntry::make('industries.name')->label('Khối ngành nghề')->listWithLineBreaks()->columnSpanFull(),
                 TextEntry::make('summary')->label('Giới thiệu')->columnSpanFull(),
             ])->columns(2)->columnSpanFull(),
             Section::make('Người đại diện & liên hệ')->schema([

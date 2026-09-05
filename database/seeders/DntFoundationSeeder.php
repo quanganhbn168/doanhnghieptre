@@ -22,7 +22,7 @@ class DntFoundationSeeder extends Seeder
         DB::transaction(function (): void {
             $now = now();
             $industryIds = $this->seedIndustries($now);
-            $this->seedProfessionalGroups($now);
+            $this->call(DntProfessionalGroupSeeder::class);
             $categoryIds = $this->seedBusinessCategories($now);
             $chapterIds = $this->seedBusinessChapters($now);
             $positionIds = $this->seedOrganizationPositions($now);
@@ -146,41 +146,6 @@ class DntFoundationSeeder extends Seeder
                 'is_active' => true,
             ], $now),
         ])->all();
-    }
-
-    private function seedProfessionalGroups(Carbon $now): void
-    {
-        $groups = [
-            ['slug' => 'nong-lam-ngu-nghiep', 'name' => 'Nông, lâm nghiệp và thủy sản'],
-            ['slug' => 'cong-nghiep-che-bien-che-tao', 'name' => 'Công nghiệp chế biến, chế tạo'],
-            ['slug' => 'xay-dung', 'name' => 'Xây dựng'],
-            ['slug' => 'thuong-mai-ban-buon-ban-le', 'name' => 'Thương mại, bán buôn và bán lẻ'],
-            ['slug' => 'van-tai-kho-bai', 'name' => 'Vận tải và kho bãi'],
-            ['slug' => 'luu-tru-an-uong', 'name' => 'Lưu trú và ăn uống'],
-            ['slug' => 'thong-tin-truyen-thong', 'name' => 'Thông tin và truyền thông'],
-            ['slug' => 'tai-chinh-ngan-hang-bao-hiem', 'name' => 'Tài chính, ngân hàng và bảo hiểm'],
-            ['slug' => 'kinh-doanh-bat-dong-san', 'name' => 'Kinh doanh bất động sản'],
-            ['slug' => 'khoa-hoc-cong-nghe', 'name' => 'Khoa học và công nghệ'],
-            ['slug' => 'tu-van-phap-ly-ke-toan', 'name' => 'Tư vấn pháp lý, kế toán và kiểm toán'],
-            ['slug' => 'dich-vu-hanh-chinh-ho-tro', 'name' => 'Dịch vụ hành chính và hỗ trợ'],
-            ['slug' => 'giao-duc-dao-tao', 'name' => 'Giáo dục và đào tạo'],
-            ['slug' => 'y-te-cham-soc-suc-khoe', 'name' => 'Y tế và chăm sóc sức khỏe'],
-            ['slug' => 'van-hoa-the-thao-giai-tri', 'name' => 'Văn hóa, thể thao và giải trí'],
-            ['slug' => 'dich-vu-ca-nhan-cong-dong', 'name' => 'Dịch vụ cá nhân và cộng đồng'],
-            ['slug' => 'nang-luong-moi-truong', 'name' => 'Năng lượng và môi trường'],
-            ['slug' => 'khac', 'name' => 'Khác'],
-        ];
-
-        foreach ($groups as $sortOrder => $group) {
-            $this->upsert('industries', ['slug' => $group['slug']], [
-                ...$group,
-                'parent_id' => null,
-                'description' => null,
-                'sort_order' => ($sortOrder + 1) * 10,
-                'is_active' => true,
-                'is_member_group' => true,
-            ], $now);
-        }
     }
 
     /** @return array<string, int> */

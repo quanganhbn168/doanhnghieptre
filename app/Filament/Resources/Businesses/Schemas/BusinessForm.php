@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\Businesses\Schemas;
 
+use App\Filament\Resources\ProfessionalGroups\Schemas\ProfessionalGroupSelect;
 use App\Models\Business;
 use Filament\Forms\Components\FileUpload;
 use Filament\Forms\Components\Placeholder;
@@ -44,7 +45,7 @@ class BusinessForm
                         'medium' => 'Quy mô vừa',
                         'large' => 'Quy mô lớn',
                     ]),
-                    Select::make('industries')->label('Nhóm nghề nghiệp')->relationship('industries', 'name', modifyQueryUsing: fn ($query) => $query->memberGroups()->where('is_active', true))->multiple()->required()->minItems(1)->maxItems(5)->maxItemsMessage('Mỗi doanh nghiệp chỉ được chọn tối đa 5 nhóm nghề nghiệp.')->helperText('Chọn từ 1 đến tối đa 5 nhóm; nhóm đầu tiên là nhóm chính.')->searchable()->preload()->columnSpanFull(),
+                    ProfessionalGroupSelect::make()->columnSpanFull(),
                     TextInput::make('phone')->label('Điện thoại')->tel()->maxLength(30),
                     TextInput::make('email')->label('Email')->email()->maxLength(255),
                     TextInput::make('website')->label('Website')->maxLength(253)->dehydrateStateUsing(static fn (?string $state): ?string => $state ? rtrim((string) preg_replace('#^https?://#i', '', trim($state)), '/') : null)->columnSpanFull(),

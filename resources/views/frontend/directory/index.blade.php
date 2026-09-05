@@ -1,13 +1,13 @@
 @extends('layouts.master')
 
 @section('title', 'Danh bạ doanh nghiệp | DNT Bắc Ninh')
-@section('meta_description', 'Tra cứu doanh nghiệp hội viên theo lĩnh vực hoạt động, quy mô và chi hội tại DNT Bắc Ninh.')
+@section('meta_description', 'Tra cứu doanh nghiệp hội viên theo khối ngành nghề, quy mô và chi hội tại DNT Bắc Ninh.')
 
 @section('content')
 <section class="dnt-directory-hero">
     <div class="container mx-auto px-4 sm:px-6 lg:px-8">
         <h1>Danh bạ doanh nghiệp</h1>
-        <p>Tra cứu doanh nghiệp hội viên theo lĩnh vực, quy mô và chi hội để kết nối đúng nhu cầu.</p>
+        <p>Tra cứu doanh nghiệp hội viên theo khối ngành nghề, quy mô và chi hội để kết nối đúng nhu cầu.</p>
     </div>
 </section>
 
@@ -17,9 +17,9 @@
             <label class="dnt-directory-filter__search">Từ khóa
                 <span><i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i><input name="q" type="search" value="{{ $filters['q'] ?? '' }}" placeholder="Tên doanh nghiệp hoặc ngành nghề"></span>
             </label>
-            <label>Lĩnh vực hoạt động
+            <label>Khối ngành nghề
                 <select name="industry">
-                    <option value="">Tất cả lĩnh vực</option>
+                    <option value="">Tất cả khối ngành nghề</option>
                     @foreach($industries as $industry)
                         <option value="{{ $industry->slug }}" @selected(($filters['industry'] ?? '') === $industry->slug)>{{ $industry->name }}</option>
                     @endforeach

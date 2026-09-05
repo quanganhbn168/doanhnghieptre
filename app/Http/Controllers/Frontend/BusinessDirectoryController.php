@@ -30,7 +30,7 @@ class BusinessDirectoryController extends Controller
         ]);
 
         $industries = Schema::hasTable('industries')
-            ? DB::table('industries')->where('is_active', true)->orderBy('sort_order')->orderBy('name')->get(['name', 'slug'])
+            ? DB::table('industries')->where('is_active', true)->where('is_member_group', true)->orderBy('sort_order')->orderBy('name')->get(['name', 'slug'])
             : collect();
         $chapters = Schema::hasTable('business_chapters')
             ? DB::table('business_chapters')->where('is_active', true)->orderBy('sort_order')->orderBy('name')->get(['name', 'slug'])
@@ -54,6 +54,7 @@ class BusinessDirectoryController extends Controller
 
         $industryNames = DB::table('business_industries')
             ->join('industries', 'industries.id', '=', 'business_industries.industry_id')
+            ->where('industries.is_member_group', true)->where('industries.is_active', true)
             ->selectRaw('business_industries.business_id, GROUP_CONCAT(DISTINCT industries.name ORDER BY business_industries.is_primary DESC, industries.sort_order, industries.name SEPARATOR " · ") as industry_names')
             ->groupBy('business_industries.business_id');
 

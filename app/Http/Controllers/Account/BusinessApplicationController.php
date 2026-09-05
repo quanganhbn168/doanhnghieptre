@@ -107,6 +107,7 @@ class BusinessApplicationController extends Controller
             'chapters' => BusinessChapter::query()->where('is_active', true)->orderBy('sort_order')->get(['id', 'name']),
             'signedMembershipApplication' => $business->getFirstMedia('signed_membership_application'),
             'selectedIndustryIds' => collect($request->old('industry_ids', $business->industries->modelKeys()))->map(static fn ($id): string => (string) $id)->all(),
+            'legacyIndustryNames' => $business->industries->filter(fn (Industry $industry) => ! $industry->is_member_group || ! $industry->is_active)->pluck('name')->join(', '),
             'mode' => 'edit',
         ]);
     }
@@ -194,9 +195,9 @@ class BusinessApplicationController extends Controller
         ], [
             'login_email.unique' => 'Email này đã có thông tin đăng nhập. Vui lòng đăng nhập để nộp hồ sơ bằng email này.',
             'confirm_information.accepted' => 'Anh/chị cần xác nhận thông tin đã khai là chính xác.',
-            'industry_ids.required' => 'Anh/chị cần chọn ít nhất một nhóm nghề nghiệp.',
-            'industry_ids.min' => 'Anh/chị cần chọn ít nhất một nhóm nghề nghiệp.',
-            'industry_ids.max' => 'Mỗi doanh nghiệp chỉ được chọn tối đa 5 nhóm nghề nghiệp.',
+            'industry_ids.required' => 'Anh/chị cần chọn ít nhất một khối ngành nghề.',
+            'industry_ids.min' => 'Anh/chị cần chọn ít nhất một khối ngành nghề.',
+            'industry_ids.max' => 'Mỗi doanh nghiệp chỉ được chọn tối đa 5 khối ngành nghề.',
             'website.regex' => 'Website không đúng định dạng.',
             'membership_application.required' => 'Anh/chị cần tải lên bản đơn gia nhập Hội đã ký và đóng dấu.',
             'membership_application.file' => 'Bản đơn gia nhập Hội phải là tệp hợp lệ.',
@@ -230,7 +231,7 @@ class BusinessApplicationController extends Controller
     {
         $ids = array_values(array_unique(array_map('intval', $industryIds)));
 
-        abort_if(count($ids) > 5, 422, 'Mỗi doanh nghiệp được chọn tối đa 5 nhóm nghề nghiệp.');
+        abort_if(count($ids) > 5, 422, 'Mỗi doanh nghiệp được chọn tối đa 5 khối ngành nghề.');
 
         $business->industries()->sync(
             collect($ids)->mapWithKeys(fn (int $id, int $index): array => [

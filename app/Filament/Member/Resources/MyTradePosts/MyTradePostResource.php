@@ -21,11 +21,11 @@ class MyTradePostResource extends Resource
 
     protected static string|BackedEnum|null $navigationIcon = 'heroicon-o-arrows-right-left';
 
-    protected static ?string $navigationLabel = 'Cơ hội giao thương';
+    protected static ?string $navigationLabel = 'Chợ doanh nghiệp';
 
-    protected static ?string $modelLabel = 'cơ hội giao thương';
+    protected static ?string $modelLabel = 'tin giao thương';
 
-    protected static ?string $pluralModelLabel = 'cơ hội giao thương của tôi';
+    protected static ?string $pluralModelLabel = 'tin giao thương của doanh nghiệp';
 
     protected static string|UnitEnum|null $navigationGroup = 'Kết nối & giao thương';
 
@@ -33,10 +33,29 @@ class MyTradePostResource extends Resource
 
     public static function getEloquentQuery(): Builder
     {
-        $memberId = auth('web')->user()?->member?->id;
+        $user = auth('web')->user();
 
-        return parent::getEloquentQuery()
-            ->when($memberId, fn (Builder $query) => $query->where('member_id', $memberId), fn (Builder $query) => $query->whereRaw('1 = 0'));
+        return parent::getEloquentQuery()->when($user, fn (Builder $query) => $query->ownedBy($user), fn (Builder $query) => $query->whereRaw('1 = 0'));
+    }
+
+    public static function canViewAny(): bool
+    {
+        return (bool) auth('web')->user()?->hasApprovedBusiness();
+    }
+
+    public static function canCreate(): bool
+    {
+        return static::canViewAny();
+    }
+
+    public static function canEdit($record): bool
+    {
+        return static::canViewAny() && static::getEloquentQuery()->whereKey($record)->exists();
+    }
+
+    public static function canDelete($record): bool
+    {
+        return false;
     }
 
     public static function form(Schema $schema): Schema

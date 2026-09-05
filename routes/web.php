@@ -31,6 +31,7 @@ Route::get('/gioi-thieu/{slug}', [Frontend\AssociationPortalController::class, '
 Route::get('/doanh-nghiep', [Frontend\AssociationPortalController::class, 'businesses'])->name('businesses.index');
 Route::get('/danh-ba-doanh-nghiep', [Frontend\BusinessDirectoryController::class, 'index'])->name('directory.index');
 Route::get('/su-kien', [Frontend\AssociationPortalController::class, 'events'])->name('events.index');
+Route::get('/su-kien/{slug}', [Frontend\AssociationPortalController::class, 'eventShow'])->name('events.show');
 Route::post('/su-kien/{event}/dang-ky', [Frontend\EventRegistrationController::class, 'store'])->middleware('throttle:frontend-forms')->name('events.register');
 Route::get('/giao-thuong', [Frontend\AssociationPortalController::class, 'trade'])->name('trade.index');
 Route::get('/giao-thuong/{slug}', [Frontend\AssociationPortalController::class, 'tradeShow'])->name('trade.show');

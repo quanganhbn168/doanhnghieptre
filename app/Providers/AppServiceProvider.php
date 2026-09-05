@@ -3,12 +3,14 @@
 namespace App\Providers;
 
 use App\Models\Intro;
+use App\Models\Media;
 use App\Models\Menu;
 use App\Models\MenuItem;
 use App\Models\Service;
 use App\Models\ServiceCategory;
 use App\Models\SiteAsset;
 use App\Models\User;
+use App\Policies\MediaPolicy;
 use App\Services\PopupService;
 use App\Services\SiteChromeCache;
 use App\Services\WebsiteSettingsService;
@@ -37,6 +39,9 @@ class AppServiceProvider extends ServiceProvider
     public function boot(): void
     {
         $this->applyWebsiteRuntimeSettings();
+
+        Gate::policy(Media::class, MediaPolicy::class);
+        Gate::policy(\Awcodes\Curator\Models\Media::class, MediaPolicy::class);
 
         // Super admin luôn vượt qua policy/permission lẻ, kể cả khi có
         // resource mới được thêm sau lần chạy seeder gần nhất.

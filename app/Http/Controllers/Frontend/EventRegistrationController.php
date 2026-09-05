@@ -25,13 +25,15 @@ class EventRegistrationController extends Controller
                 ->where('slug', $event)
                 ->where('status', 'published')
                 ->where('visibility', 'public')
+                ->whereNull('deleted_at')
+                ->where(fn ($events) => $events->whereNull('published_at')->orWhere('published_at', '<=', now()))
                 ->lockForUpdate()
                 ->first();
 
             abort_unless($eventRecord, 404);
 
-            if (($eventRecord->registration_opens_at && now()->lt($eventRecord->registration_opens_at))
-                || ($eventRecord->registration_closes_at && now()->gt($eventRecord->registration_closes_at))) {
+            if (now()->gte($eventRecord->starts_at) || ($eventRecord->registration_opens_at && now()->lt($eventRecord->registration_opens_at))
+                || ($eventRecord->registration_closes_at && now()->gte($eventRecord->registration_closes_at))) {
                 throw ValidationException::withMessages([
                     'event' => 'Thời gian đăng ký cho sự kiện này đã kết thúc hoặc chưa mở.',
                 ]);
@@ -68,8 +70,6 @@ class EventRegistrationController extends Controller
                 'phone' => $data['phone'],
                 'guest_count' => $guestCount,
                 'status' => 'registered',
-                'attendance_status' => 'pending',
-                'payment_status' => 'not_required',
                 'registered_at' => now(),
                 'updated_at' => now(),
             ];
@@ -100,7 +100,7 @@ class EventRegistrationController extends Controller
             ]);
         });
 
-        return redirect()->to(route('home').'#su-kien')
+        return redirect()->to(route('events.show', $event))
             ->with('success', 'Đăng ký sự kiện thành công. Ban tổ chức sẽ liên hệ xác nhận.');
     }
 }

@@ -12,6 +12,6 @@ class ListMyTradePosts extends ListRecords
 
     protected function getHeaderActions(): array
     {
-        return [CreateAction::make()->label('Đăng cơ hội giao thương')];
+        return [CreateAction::make()->label('Đăng tin giao thương')];
     }
 }

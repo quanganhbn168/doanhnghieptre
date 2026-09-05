@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
@@ -12,10 +13,27 @@ class TradePost extends Model
     use SoftDeletes;
 
     public const TYPE_OPTIONS = [
-        'buy' => 'Cần mua',
-        'sell' => 'Cần bán',
+        'buy' => 'Cần tìm dịch vụ / sản phẩm',
+        'sell' => 'Cung cấp dịch vụ / sản phẩm',
         'cooperate' => 'Mời hợp tác',
     ];
+
+    public const STATUS_OPTIONS = [
+        'draft' => 'Bản nháp', 'pending' => 'Chờ Hội duyệt', 'approved' => 'Đã duyệt',
+        'rejected' => 'Cần bổ sung', 'closed' => 'Đã đóng',
+    ];
+
+    public function scopeOwnedBy(Builder $query, User $user): Builder
+    {
+        return $query->whereHas('business', fn (Builder $businesses) => $businesses->representedBy($user));
+    }
+
+    public function scopePubliclyVisible(Builder $query): Builder
+    {
+        return $query->where('status', 'approved')
+            ->whereHas('business', fn (Builder $businesses) => $businesses->where('status', 'approved'))
+            ->where(fn (Builder $posts) => $posts->whereNull('expires_at')->orWhere('expires_at', '>', now()));
+    }
 
     protected $guarded = [];
 

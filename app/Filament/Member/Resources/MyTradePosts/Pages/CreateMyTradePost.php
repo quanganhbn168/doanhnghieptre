@@ -3,34 +3,26 @@
 namespace App\Filament\Member\Resources\MyTradePosts\Pages;
 
 use App\Filament\Member\Resources\MyTradePosts\MyTradePostResource;
-use App\Models\TradePost;
+use App\Services\TradePostService;
 use Filament\Resources\Pages\CreateRecord;
-use Illuminate\Support\Str;
+use Illuminate\Database\Eloquent\Model;
 
 class CreateMyTradePost extends CreateRecord
 {
     protected static string $resource = MyTradePostResource::class;
 
-    protected function mutateFormDataBeforeCreate(array $data): array
+    protected function handleRecordCreation(array $data): Model
     {
-        return [
-            ...$data,
-            'member_id' => auth('web')->user()->member->id,
-            'slug' => $this->availableSlug($data['title']),
-            'status' => 'pending',
-        ];
+        return app(TradePostService::class)->submit(auth('web')->user(), $data);
     }
 
-    private function availableSlug(string $title): string
+    protected function getRedirectUrl(): string
     {
-        $base = Str::slug($title) ?: 'co-hoi-giao-thuong';
-        $slug = $base;
-        $suffix = 2;
+        return $this->getResource()::getUrl('index');
+    }
 
-        while (TradePost::query()->withTrashed()->where('slug', $slug)->exists()) {
-            $slug = $base.'-'.$suffix++;
-        }
-
-        return $slug;
+    protected function getCreatedNotificationTitle(): ?string
+    {
+        return 'Đã gửi tin cho Hội duyệt';
     }
 }

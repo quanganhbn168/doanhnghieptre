@@ -12,6 +12,6 @@ class ListIntros extends ListRecords
 
     protected function getHeaderActions(): array
     {
-        return [CreateAction::make()->label('Thêm nội dung intro')];
+        return [CreateAction::make()->label('Thêm thông tin Hội')];
     }
 }

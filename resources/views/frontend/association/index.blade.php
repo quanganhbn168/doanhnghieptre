@@ -15,12 +15,13 @@
     <div class="container mx-auto px-4 sm:px-6 lg:px-8">
         @if($itemType === 'trade')
             <form class="dnt-directory-filter" method="GET" action="{{ route('trade.index') }}">
+                <label><span>Tìm dịch vụ / sản phẩm</span><input type="search" name="q" value="{{ $search ?? '' }}" maxlength="100" placeholder="Nhập nhu cầu hoặc tên doanh nghiệp"></label>
                 <label><span>Loại cơ hội</span><select name="type"><option value="">Tất cả cơ hội</option>@foreach($tradeTypes as $value => $label)<option value="{{ $value }}" @selected($activeTradeType === $value)>{{ $label }}</option>@endforeach</select></label>
-                <div class="dnt-directory-filter__actions"><button type="submit">Lọc cơ hội</button>@if($activeTradeType)<a href="{{ route('trade.index') }}">Xóa lọc</a>@endif</div>
+                <div class="dnt-directory-filter__actions"><button type="submit">Tìm tin</button>@if($activeTradeType || ($search ?? ''))<a href="{{ route('trade.index') }}">Xóa lọc</a>@endif</div>
                 @auth
-                    <a class="dnt-button dnt-button--dark" href="{{ auth()->user()->hasApprovedBusiness() ? url('/thanh-vien/my-trade-posts/create') : route('account.dashboard') }}">Đăng cơ hội</a>
+                    <a class="dnt-button dnt-button--dark" href="{{ auth()->user()->hasApprovedBusiness() ? url('/thanh-vien/my-trade-posts/create') : route('account.dashboard') }}">Đăng tin giao thương</a>
                 @else
-                    <a class="dnt-button dnt-button--dark" href="{{ route('membership.create') }}">Đăng ký để đăng cơ hội</a>
+                    <a class="dnt-button dnt-button--dark" href="{{ route('membership.create') }}">Đăng ký hội viên để đăng tin</a>
                 @endauth
             </form>
         @endif
@@ -39,13 +40,16 @@
                             <h2>{{ $item->name }}</h2><span>{{ $item->province ?: 'Bắc Ninh' }}</span><div>{{ $item->summary ?: 'Thông tin đang được cập nhật.' }}</div>
                         @elseif($itemType === 'event')
                             <span class="dnt-directory-card__icon"><i class="fa-solid fa-calendar-days" aria-hidden="true"></i></span>
-                            <h2>{{ $item->title }}</h2><span>{{ $item->date_day }} {{ $item->date_month }} {{ $item->date_year }} @if($item->venue_name) · {{ $item->venue_name }} @endif</span><div>{{ $item->summary ?: 'Thông tin chương trình đang được cập nhật.' }}</div>
+                            <h2><a href="{{ route('events.show', $item->slug) }}">{{ $item->title }}</a></h2><span>{{ $item->date_day }} {{ $item->date_month }} {{ $item->date_year }} @if($item->venue_name) · {{ $item->venue_name }} @endif</span><div>{{ $item->summary ?: 'Thông tin chương trình đang được cập nhật.' }}</div>
                         @else
                             <h2><a href="{{ route('trade.show', $item->slug) }}">{{ $item->title }}</a></h2><span>{{ $item->business_name ?: 'Doanh nghiệp hội viên' }} · {{ $item->location_label ?: 'Đang cập nhật khu vực' }}</span><div>{{ $item->summary ?: 'Thông tin giao thương đang được cập nhật.' }}</div>
                         @endif
                     </article>
                 @endforeach
             </div>
+            @if($items instanceof \Illuminate\Contracts\Pagination\LengthAwarePaginator)
+                <div class="mt-8">{{ $items->links() }}</div>
+            @endif
         @else
             <div class="dnt-empty-card"><i class="fa-solid {{ $pageIcon }}" aria-hidden="true"></i><div><h2>{{ $pageTitle }} đang được cập nhật</h2><p>{{ $pageLead }}</p></div></div>
         @endif

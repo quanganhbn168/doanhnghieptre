@@ -2,13 +2,13 @@
 
 namespace App\Providers\Filament;
 
+use App\Filament\Member\Pages\MemberOverview;
 use App\Models\SiteAsset;
 use Filament\Http\Middleware\Authenticate;
 use Filament\Http\Middleware\AuthenticateSession;
 use Filament\Http\Middleware\DisableBladeIconComponents;
 use Filament\Http\Middleware\DispatchServingFilamentEvent;
 use Filament\Navigation\NavigationGroup;
-use App\Filament\Member\Pages\MemberOverview;
 use Filament\Panel;
 use Filament\PanelProvider;
 use Filament\Support\Colors\Color;
@@ -28,7 +28,7 @@ class MemberPanelProvider extends PanelProvider
             ->id('member')
             ->path('thanh-vien')
             ->login()
-            ->authGuard('web')
+            ->authGuard('web')->databaseTransactions()
             ->brandName('Cổng Hội viên DNT Bắc Ninh')
             ->brandLogo(fn (): ?string => SiteAsset::current()->getFirstMediaUrl('logo') ?: null)
             ->brandLogoHeight('2.25rem')

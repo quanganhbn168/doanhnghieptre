@@ -169,6 +169,8 @@ class AssociationHomeService
         $query = DB::table('events')
             ->where('events.status', 'published')
             ->where('events.visibility', 'public')
+            ->whereNull('events.deleted_at')
+            ->where(fn ($events) => $events->whereNull('events.published_at')->orWhere('events.published_at', '<=', now()))
             ->select([
                 'events.id',
                 'events.title',
@@ -204,9 +206,11 @@ class AssociationHomeService
         $query = DB::table('trade_posts')
             ->leftJoin('businesses', 'trade_posts.business_id', '=', 'businesses.id')
             ->where('trade_posts.status', 'approved')
+            ->whereNull('trade_posts.deleted_at')
+            ->where('businesses.status', 'approved')
             ->where(function ($query): void {
                 $query->whereNull('trade_posts.expires_at')
-                    ->orWhere('trade_posts.expires_at', '>=', now());
+                    ->orWhere('trade_posts.expires_at', '>', now());
             })
             ->select([
                 'trade_posts.id',
@@ -245,7 +249,7 @@ class AssociationHomeService
         $event->date_month = 'Tháng '.$startsAt->format('m');
         $event->date_year = $startsAt->format('Y');
         $event->time_label = $startsAt->format('H:i');
-        $event->registration_is_open = (! $event->registration_opens_at || Carbon::parse($event->registration_opens_at)->isPast())
+        $event->registration_is_open = $startsAt->isFuture() && (! $event->registration_opens_at || Carbon::parse($event->registration_opens_at)->isPast())
             && (! $event->registration_closes_at || Carbon::parse($event->registration_closes_at)->isFuture());
 
         return $event;

@@ -3,10 +3,12 @@
 namespace App\Http\Controllers\Frontend;
 
 use App\Http\Controllers\Controller;
+use App\Models\Event;
 use App\Models\Intro;
 use App\Models\TradePost;
 use App\Services\AssociationHomeService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\View\View;
 
 class AssociationPortalController extends Controller
@@ -53,18 +55,39 @@ class AssociationPortalController extends Controller
         ]);
     }
 
-    public function trade(Request $request, AssociationHomeService $associationHome): View
+    public function eventShow(string $slug): View
+    {
+        $event = Event::query()->publiclyVisible()->where('slug', $slug)->firstOrFail();
+        $registeredSlots = (int) $event->registrations()->where('status', 'registered')->sum(DB::raw('guest_count + 1'));
+        $remainingSlots = $event->capacity ? max(0, $event->capacity - $registeredSlots) : null;
+        $registrationIsOpen = $event->registrationIsOpen() && ($remainingSlots === null || $remainingSlots > 0);
+
+        return view('frontend.association.event-detail', compact('event', 'remainingSlots', 'registrationIsOpen'));
+    }
+
+    public function trade(Request $request): View
     {
         $filters = $request->validate([
             'type' => ['nullable', 'string', 'in:'.implode(',', array_keys(TradePost::TYPE_OPTIONS))],
+            'q' => ['nullable', 'string', 'max:100'],
         ]);
 
+        $search = trim($filters['q'] ?? '');
+        $items = TradePost::query()->publiclyVisible()->with('business')
+            ->when($filters['type'] ?? null, fn ($query, $type) => $query->where('type', $type))
+            ->when($search !== '', fn ($query) => $query->where(fn ($posts) => $posts
+                ->where('title', 'like', '%'.$search.'%')->orWhere('summary', 'like', '%'.$search.'%')
+                ->orWhereHas('business', fn ($businesses) => $businesses->where('name', 'like', '%'.$search.'%'))))
+            ->orderByDesc('approved_at')->orderByDesc('id')->paginate(24)->withQueryString();
+        $items->getCollection()->each(fn (TradePost $post) => $post->setAttribute('business_name', $post->business?->name));
+
         return view('frontend.association.index', [
-            'pageTitle' => 'Giao thương',
-            'pageLead' => 'Cơ hội mua bán, hợp tác và kết nối nhu cầu giữa các doanh nghiệp.',
+            'pageTitle' => 'Chợ doanh nghiệp',
+            'pageLead' => 'Tìm dịch vụ, giới thiệu sản phẩm và kết nối trực tiếp với doanh nghiệp hội viên.',
             'pageIcon' => 'fa-handshake',
             'itemType' => 'trade',
-            'items' => $associationHome->tradePosts(24, $filters['type'] ?? null),
+            'items' => $items,
+            'search' => $search,
             'tradeTypes' => TradePost::TYPE_OPTIONS,
             'activeTradeType' => $filters['type'] ?? null,
         ]);
@@ -75,8 +98,7 @@ class AssociationPortalController extends Controller
         $tradePost = TradePost::query()
             ->with(['business', 'member', 'industries'])
             ->where('slug', $slug)
-            ->where('status', 'approved')
-            ->where(fn ($query) => $query->whereNull('expires_at')->orWhere('expires_at', '>=', now()))
+            ->publiclyVisible()
             ->firstOrFail();
 
         return view('frontend.association.trade-detail', compact('tradePost'));

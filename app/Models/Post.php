@@ -2,8 +2,8 @@
 
 namespace App\Models;
 
-use App\Traits\HasSlug;
 use App\Models\Concerns\HasComments;
+use App\Traits\HasSlug;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -50,7 +50,8 @@ class Post extends Model implements HasMedia
 
     public function scopeVisibleOnSite(Builder $query): Builder
     {
-        return $query;
+        return $query->where('is_active', true)
+            ->where(fn (Builder $posts) => $posts->whereNull('published_at')->orWhere('published_at', '<=', now()));
     }
 
     public function category(): BelongsTo
@@ -77,5 +78,4 @@ class Post extends Model implements HasMedia
             ->singleFile()
             ->useDisk('public_media');
     }
-
 }

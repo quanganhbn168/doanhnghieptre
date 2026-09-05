@@ -4,6 +4,7 @@ namespace App\Providers\Filament;
 
 use App\Filament\Association\Pages\AssociationDashboard;
 use App\Models\SiteAsset;
+use Awcodes\Curator\CuratorPlugin;
 use Filament\Http\Middleware\Authenticate;
 use Filament\Http\Middleware\AuthenticateSession;
 use Filament\Http\Middleware\DisableBladeIconComponents;
@@ -38,8 +39,13 @@ class AssociationPanelProvider extends PanelProvider
                 'primary' => Color::hex('#c21f2b'),
             ])
             ->viteTheme('resources/css/filament/admin/theme.css')
+            ->plugins([
+                CuratorPlugin::make()->label('Thư viện ảnh')->pluralLabel('Thư viện ảnh')->navigationGroup('Nội dung Hội')->navigationSort(40),
+            ])
             ->navigationGroups([
                 NavigationGroup::make('Hội viên doanh nghiệp'),
+                NavigationGroup::make('Chợ doanh nghiệp'),
+                NavigationGroup::make('Nội dung Hội'),
                 NavigationGroup::make('Tổ chức Hội'),
 
             ])

@@ -21,6 +21,8 @@ Tại **Cán bộ & phân quyền**, tạo cán bộ, chọn vai trò và Chi h�
 
 Hồ sơ, action, thống kê, URL chi tiết và tải đơn đều kiểm tra phạm vi. Đơn đã ký nằm trên disk `local`, không đưa ra thư mục công khai. Thao tác duyệt khóa bản ghi trong transaction và kiểm tra lại trạng thái để tránh duyệt trùng hoặc dùng màn hình cũ.
 
+Đơn gia nhập Hội chỉ nhận **PDF, DOC, DOCX**, tối đa **10 MB**. Trình duyệt báo lỗi khi chọn sai đuôi hoặc vượt dung lượng; máy chủ kiểm tra cả đuôi và MIME suy ra từ nội dung tệp. Không nhận ảnh, bảng tính, tệp nén hay tệp thực thi. Khi bổ sung hồ sơ, có thể giữ đơn đã nộp; tệp thay thế phải qua cùng quy tắc kiểm tra.
+
 ## Triển khai trên cơ sở dữ liệu hiện có
 
 ```sh
@@ -40,3 +42,5 @@ Không chạy `migrate:fresh` hay seed lại tài khoản quản trị trên d�
 ## Kiểm thử
 
 `php artisan test` dùng database riêng `doanhnhantre_testing` (MySQL), không dùng database chạy website. Các test hồ sơ sử dụng disk giả cho file tải lên và kiểm tra HTTP/Livewire cho nộp đơn, duyệt hai cấp, bổ sung, quyền theo Chi hội, chống duyệt trùng và tạo/sửa cán bộ.
+
+Kiểm tra riêng tải đơn: `php artisan test --filter=MembershipApplicationUploadTest` và `node --test tests/Frontend/membership-application-upload.test.mjs`.

@@ -71,3 +71,36 @@ if (select && window.TomSelect) {
 
     updateSelection();
 }
+
+const applicationFile = document.getElementById('membership_application');
+
+if (applicationFile) {
+    const error = document.getElementById('membership-application-error');
+    const extensions = applicationFile.accept.split(',').map((extension) => extension.trim());
+    const maxSize = Number(applicationFile.dataset.maxFileSize);
+    const showError = (message) => {
+        error.textContent = message;
+        error.hidden = !message;
+        applicationFile.setAttribute('aria-invalid', message ? 'true' : 'false');
+    };
+
+    applicationFile.addEventListener('change', () => {
+        const file = applicationFile.files[0];
+        let message = '';
+
+        if (file && !extensions.some((extension) => file.name.toLowerCase().endsWith(extension))) {
+            message = 'Đơn gia nhập Hội chỉ nhận tệp PDF, DOC hoặc DOCX hợp lệ.';
+        } else if (file && file.size > maxSize) {
+            message = 'Đơn gia nhập Hội không được vượt quá 10 MB.';
+        }
+
+        applicationFile.setCustomValidity(message);
+        showError(message);
+    });
+
+    applicationFile.addEventListener('invalid', () => {
+        showError(applicationFile.validity.valueMissing
+            ? 'Anh/chị cần tải lên bản đơn gia nhập Hội đã ký và đóng dấu.'
+            : applicationFile.validationMessage);
+    });
+}

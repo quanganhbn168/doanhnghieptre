@@ -187,9 +187,9 @@ class BusinessApplicationController extends Controller
             'job_title' => ['nullable', 'string', 'max:160'],
             'logo' => ['nullable', 'image', 'max:5120'],
             'membership_application' => [
+                'bail',
                 $business?->hasMedia('signed_membership_application') ? 'nullable' : 'required',
-                'file',
-                File::types(['pdf', 'jpg', 'jpeg', 'png'])->max('10mb'),
+                File::types(['pdf', 'doc', 'docx'])->extensions(['pdf', 'doc', 'docx'])->max(10 * 1024),
             ],
             'confirm_information' => ['accepted'],
         ], [
@@ -201,6 +201,10 @@ class BusinessApplicationController extends Controller
             'website.regex' => 'Website không đúng định dạng.',
             'membership_application.required' => 'Anh/chị cần tải lên bản đơn gia nhập Hội đã ký và đóng dấu.',
             'membership_application.file' => 'Bản đơn gia nhập Hội phải là tệp hợp lệ.',
+            'membership_application.mimes' => 'Đơn gia nhập Hội chỉ nhận tệp PDF, DOC hoặc DOCX hợp lệ.',
+            'membership_application.extensions' => 'Đơn gia nhập Hội chỉ nhận tệp PDF, DOC hoặc DOCX hợp lệ.',
+            'membership_application.max' => 'Đơn gia nhập Hội không được vượt quá 10 MB.',
+            'membership_application.uploaded' => 'Không tải được đơn gia nhập Hội. Vui lòng chọn tệp PDF, DOC hoặc DOCX tối đa 10 MB và thử lại.',
         ]);
     }
 

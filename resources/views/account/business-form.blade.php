@@ -113,18 +113,23 @@
                 <section class="dnt-business-application__membership-application">
                     <div class="dnt-business-application__section-head">
                         <h2>Đơn gia nhập Hội</h2>
-                        <p>Tải mẫu đơn, ký và đóng dấu, sau đó gửi bản chụp hoặc bản quét cùng hồ sơ.</p>
+                        <p>Tải mẫu đơn, hoàn thiện, ký và đóng dấu, sau đó gửi tệp tài liệu cùng hồ sơ.</p>
                     </div>
                     <div class="dnt-business-application__document-grid">
                         <div class="dnt-business-application__template">
                             <strong>1. Tải và hoàn thiện mẫu đơn</strong>
-                            <p>In đơn, ký tên và đóng dấu doanh nghiệp trước khi quét hoặc chụp lại.</p>
+                            <p>Hoàn thiện đơn, ký và đóng dấu doanh nghiệp. Nếu quét bản giấy, vui lòng lưu thành PDF.</p>
                             <a class="dnt-button dnt-button--outline-dark" href="{{ asset('downloads/don-gia-nhap-hoi-082026.docx') }}" download>Tải mẫu đơn (.docx) <i class="fa-solid fa-download" aria-hidden="true"></i></a>
                         </div>
                         <div class="dnt-business-application__upload">
                             <label for="membership_application"><span>2. Tải bản đơn đã ký, đóng dấu @if(! $signedMembershipApplication)<b>*</b>@endif</span></label>
-                            <input id="membership_application" class="ui-input" name="membership_application" type="file" accept=".pdf,.jpg,.jpeg,.png,application/pdf,image/jpeg,image/png" @required(! $signedMembershipApplication)>
-                            <small>Nhận PDF, JPG hoặc PNG; tối đa 10 MB.</small>
+                            <input id="membership_application" class="ui-input" name="membership_application" type="file"
+                                accept=".pdf,.doc,.docx" data-max-file-size="10485760"
+                                aria-describedby="membership-application-help membership-application-error"
+                                aria-invalid="{{ $errors->has('membership_application') ? 'true' : 'false' }}"
+                                @required(! $signedMembershipApplication)>
+                            <small id="membership-application-help">Chỉ nhận PDF, DOC hoặc DOCX; tối đa 10 MB.</small>
+                            <div id="membership-application-error" class="ui-error" role="alert" @if(! $errors->has('membership_application')) hidden @endif>{{ $errors->first('membership_application') }}</div>
                             @if($signedMembershipApplication)
                                 <p>Đã nhận tệp <a class="dnt-text-link" href="{{ route('business.membership-application.download', $business) }}">{{ $signedMembershipApplication->file_name }} <i class="fa-solid fa-download" aria-hidden="true"></i></a>. Chỉ tải lại khi cần thay thế.</p>
                             @endif

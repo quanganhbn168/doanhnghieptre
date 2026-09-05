@@ -106,7 +106,7 @@ class BusinessApplicationController extends Controller
             'industries' => $this->industries(),
             'chapters' => BusinessChapter::query()->where('is_active', true)->orderBy('sort_order')->get(['id', 'name']),
             'signedMembershipApplication' => $business->getFirstMedia('signed_membership_application'),
-            'selectedIndustryIds' => collect($request->old('industry_ids', $business->industries->modelKeys()))->map(static fn ($id): string => (string) $id)->all(),
+            'selectedIndustryIds' => collect($request->old('industry_ids', $business->industries->sortByDesc('pivot.is_primary')->values()->modelKeys()))->map(static fn ($id): string => (string) $id)->all(),
             'legacyIndustryNames' => $business->industries->filter(fn (Industry $industry) => ! $industry->is_member_group || ! $industry->is_active)->pluck('name')->join(', '),
             'mode' => 'edit',
         ]);

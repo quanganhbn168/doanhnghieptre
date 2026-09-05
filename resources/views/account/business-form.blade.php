@@ -4,6 +4,15 @@
 @section('meta_description', 'Gửi hồ sơ doanh nghiệp để kết nối với Hội Doanh nhân trẻ Bắc Ninh.')
 @section('robots', 'noindex, nofollow')
 
+@push('styles')
+    @vite('resources/css/business-application.css')
+@endpush
+
+@push('scripts')
+    <script src="{{ asset('vendor/tom-select/js/tom-select.complete.min.js') }}"></script>
+    @vite('resources/js/business-application.js')
+@endpush
+
 @section('content')
     <div class="dnt-application-page">
         <div class="container mx-auto px-4 sm:px-6 lg:px-8">
@@ -40,7 +49,24 @@
                     <div class="dnt-business-application__grid">
                         <label><span>Nhóm doanh nghiệp</span><select class="ui-select" name="business_category_id"><option value="">Chọn nhóm</option>@foreach($categories as $category)<option value="{{ $category->id }}" @selected((string) old('business_category_id', $business->business_category_id) === (string) $category->id)>{{ $category->name }}</option>@endforeach</select></label>
                         <label><span>Quy mô <b>*</b></span><select class="ui-select" name="business_size" required><option value="">Chọn quy mô</option>@foreach(['small' => 'Quy mô nhỏ', 'medium' => 'Quy mô vừa', 'large' => 'Quy mô lớn'] as $value => $label)<option value="{{ $value }}" @selected(old('business_size', $business->business_size) === $value)>{{ $label }}</option>@endforeach</select></label>
-                        <label class="dnt-business-application__full"><span>Khối ngành nghề <b>*</b></span><select class="ui-select" name="industry_ids[]" multiple required size="6">@foreach($industries as $industry)<option value="{{ $industry->id }}" @selected(in_array((string) $industry->id, $selectedIndustryIds, true))>{{ $industry->name }}</option>@endforeach</select><small>Chọn từ 1 đến tối đa 5 khối; khối đầu tiên là khối chính.</small></label>
+                        <div class="dnt-business-application__full dnt-industry-picker">
+                            <label for="industry_ids"><span>Khối ngành nghề <b>*</b></span></label>
+                            <select id="industry_ids" name="industry_ids[]" multiple required
+                                data-industry-picker data-selected="{{ json_encode(array_values($selectedIndustryIds)) }}"
+                                aria-describedby="industry-help industry-count{{ $errors->has('industry_ids*') ? ' industry-error' : '' }}"
+                                aria-invalid="{{ $errors->has('industry_ids*') ? 'true' : 'false' }}">
+                                @foreach($industries as $industry)
+                                    <option value="{{ $industry->id }}" @selected(in_array((string) $industry->id, $selectedIndustryIds, true))>{{ $industry->name }}</option>
+                                @endforeach
+                            </select>
+                            <div class="dnt-industry-picker__help">
+                                <small id="industry-help">Chọn từ 1 đến 5 khối. Khối chọn đầu tiên là khối chính.</small>
+                                <small id="industry-count" role="status" aria-live="polite" aria-atomic="true"></small>
+                            </div>
+                            @if($errors->has('industry_ids*'))
+                                <p id="industry-error" class="ui-error">{{ $errors->first('industry_ids*') }}</p>
+                            @endif
+                        </div>
                         <label class="dnt-business-application__full"><span>Chi hội mong muốn tham gia</span><select class="ui-select" name="business_chapter_id"><option value="">Để Hội phân công Chi hội phù hợp</option>@foreach($chapters as $chapter)<option value="{{ $chapter->id }}" @selected((string) old('business_chapter_id', $business->business_chapter_id) === (string) $chapter->id)>{{ $chapter->name }}</option>@endforeach</select><small>Hội xác nhận Chi hội tiếp nhận khi duyệt hồ sơ.</small></label>
                     </div>
                 </section>

@@ -1,0 +1,180 @@
+@import '../../public/vendor/tom-select/css/tom-select.css';
+
+.dnt-industry-picker {
+    display: grid;
+    min-width: 0;
+    gap: .5rem;
+}
+
+.dnt-industry-picker select:not(.tomselected) {
+    width: 100%;
+    padding: .75rem;
+    border: 1px solid var(--dnt-line);
+    border-radius: .5rem;
+    font-size: 1rem;
+}
+
+.dnt-industry-picker .ts-wrapper {
+    --ts-pr-min: 2.5rem;
+    min-width: 0;
+}
+
+.dnt-industry-picker .ts-control,
+.dnt-industry-picker .ts-wrapper.multi.has-items .ts-control {
+    align-items: center;
+    min-height: 3.25rem;
+    gap: .5rem;
+    padding: .625rem 2.5rem .625rem .75rem;
+    border: 1px solid var(--dnt-line);
+    border-radius: .5rem;
+    background: #fff;
+    color: var(--dnt-brand-black);
+    font: inherit;
+    cursor: text;
+    box-shadow: none;
+}
+
+.dnt-industry-picker .ts-control::after {
+    position: absolute;
+    top: 1.25rem;
+    right: 1rem;
+    width: .5rem;
+    height: .5rem;
+    border-right: 1.5px solid var(--dnt-muted);
+    border-bottom: 1.5px solid var(--dnt-muted);
+    transform: rotate(45deg);
+    content: '';
+    pointer-events: none;
+}
+
+.dnt-industry-picker .ts-wrapper.full {
+    --ts-pr-min: .75rem;
+}
+
+.dnt-industry-picker .full .ts-control::after {
+    display: none;
+}
+
+.dnt-industry-picker .ts-wrapper:focus-within .ts-control,
+.dnt-industry-picker .ts-wrapper.focus .ts-control {
+    border-color: var(--dnt-brand-red);
+    box-shadow: 0 0 0 3px rgb(var(--dnt-brand-red-rgb) / .1);
+}
+
+.dnt-industry-picker .ts-control:has([aria-invalid="true"]) {
+    border-color: var(--dnt-brand-red);
+}
+
+.dnt-industry-picker .ts-control > input {
+    width: auto;
+    height: 1.75rem;
+    margin: 0 !important;
+    color: var(--dnt-brand-black);
+    font-family: inherit;
+    font-size: 1rem;
+}
+
+.dnt-industry-picker .ts-control > input::placeholder {
+    color: var(--dnt-muted);
+    opacity: 1;
+}
+
+.dnt-industry-picker .ts-wrapper.multi .ts-control > .item {
+    display: inline-flex;
+    align-items: center;
+    max-width: 100%;
+    gap: .25rem;
+    margin: 0;
+    padding: .125rem .25rem .125rem .625rem;
+    overflow: visible;
+    border: 1px solid rgb(var(--dnt-brand-red-rgb) / .15);
+    border-radius: .375rem;
+    background: rgb(var(--dnt-brand-red-rgb) / .055);
+    color: var(--dnt-brand-black);
+    font-size: .875rem;
+    line-height: 1.5;
+}
+
+.dnt-industry-picker .item > span {
+    min-width: 0;
+    overflow-wrap: anywhere;
+}
+
+.dnt-industry-picker .ts-wrapper.multi .ts-control > .item.active {
+    border-color: var(--dnt-brand-red);
+    background: rgb(var(--dnt-brand-red-rgb) / .12);
+}
+
+.dnt-industry-picker .ts-wrapper.plugin-remove_button:not(.rtl) .item .remove {
+    display: grid;
+    flex: 0 0 1.75rem;
+    place-items: center;
+    width: 1.75rem;
+    height: 1.75rem;
+    margin: 0;
+    padding: 0;
+    border: 0;
+    border-radius: .25rem;
+    background: transparent;
+    color: var(--dnt-brand-red);
+    font-size: 1.25rem;
+    line-height: 1;
+    cursor: pointer;
+}
+
+.dnt-industry-picker .item .remove:hover,
+.dnt-industry-picker .item .remove:focus-visible {
+    background: rgb(var(--dnt-brand-red-rgb) / .12);
+    outline: 2px solid var(--dnt-brand-red);
+    outline-offset: -2px;
+}
+
+.dnt-industry-picker .ts-dropdown {
+    z-index: 20;
+    margin-top: .375rem;
+    overflow: hidden;
+    border: 1px solid var(--dnt-line);
+    border-radius: .5rem;
+    background: #fff;
+    color: var(--dnt-brand-black);
+    font-size: .9375rem;
+    line-height: 1.5;
+    box-shadow: 0 10px 24px rgb(var(--dnt-brand-black-rgb) / .12);
+}
+
+.dnt-industry-picker .ts-dropdown-content {
+    max-height: 16rem;
+    padding: .375rem;
+    overscroll-behavior: contain;
+}
+
+.dnt-industry-picker .ts-dropdown .option,
+.dnt-industry-picker .ts-dropdown .no-results {
+    padding: .625rem .75rem;
+    overflow-wrap: anywhere;
+    border-radius: .25rem;
+}
+
+.dnt-industry-picker .ts-dropdown .active {
+    background: rgb(var(--dnt-brand-red-rgb) / .065);
+    color: var(--dnt-brand-red);
+}
+
+.dnt-industry-picker .ts-dropdown .highlight {
+    background: transparent;
+    color: inherit;
+    font-weight: 700;
+}
+
+.dnt-industry-picker__help {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    gap: .25rem 1rem;
+    color: var(--dnt-muted);
+}
+
+.dnt-industry-picker__help small {
+    font-size: .75rem;
+    line-height: 1.5;
+}

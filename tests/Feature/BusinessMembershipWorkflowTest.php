@@ -74,6 +74,61 @@ class BusinessMembershipWorkflowTest extends TestCase
         $this->assertDatabaseCount('businesses', 0);
     }
 
+    public function test_multiple_groups_keep_the_primary_group_when_reopening_and_correcting_an_application(): void
+    {
+        $payload = $this->payload();
+        $primary = Industry::query()->create(['name' => 'Khối chính', 'slug' => 'primary-group', 'is_active' => true, 'is_member_group' => true]);
+        $payload['industry_ids'] = [$primary->id, $payload['industry_ids'][0]];
+        $selected = array_map('strval', $payload['industry_ids']);
+
+        $this->post(route('membership.store'), $payload)->assertSessionHasNoErrors();
+        $business = Business::query()->where('tax_code', $payload['tax_code'])->firstOrFail();
+        $this->assertCount(2, $business->industries);
+        $this->assertSame($primary->id, $business->industries->firstWhere('pivot.is_primary', true)->id);
+
+        $business->update(['status' => 'rejected']);
+        $editUrl = route('account.businesses.edit', $business);
+        $this->get($editUrl)->assertOk()->assertViewHas('selectedIndustryIds', $selected);
+
+        // A failed correction must retain the new selection order, not the stored primary.
+        $payload['industry_ids'] = array_reverse($payload['industry_ids']);
+        $payload['name'] = '';
+        unset($payload['membership_application']);
+        $this->from($editUrl)->patch(route('account.businesses.update', $business), $payload)
+            ->assertSessionHasErrors('name')->assertRedirect($editUrl);
+        $this->get($editUrl)->assertOk()->assertViewHas('selectedIndustryIds', array_reverse($selected));
+
+        $payload['name'] = $business->name;
+        $this->patch(route('account.businesses.update', $business), $payload)->assertSessionHasNoErrors();
+        $this->assertSame($payload['industry_ids'][0], $business->fresh()->industries->firstWhere('pivot.is_primary', true)->id);
+    }
+
+    public function test_membership_requires_one_to_five_groups_and_retains_guest_selections_after_validation(): void
+    {
+        $payload = $this->payload();
+        $groupIds = collect(range(1, 6))->map(fn (int $index) => Industry::query()->create([
+            'name' => 'Khối '.$index, 'slug' => 'group-'.$index, 'is_active' => true, 'is_member_group' => true,
+        ])->id)->reverse()->values()->all();
+
+        foreach ([[], $groupIds] as $invalidIds) {
+            $this->post(route('membership.store'), [...$payload, 'industry_ids' => $invalidIds])
+                ->assertSessionHasErrors('industry_ids');
+        }
+        $this->assertDatabaseCount('businesses', 0);
+        $this->assertDatabaseCount('users', 0);
+
+        $payload['industry_ids'] = array_slice($groupIds, 0, 5);
+        $this->from(route('membership.create'))->post(route('membership.store'), [...$payload, 'name' => ''])
+            ->assertSessionHasErrors('name')->assertRedirect(route('membership.create'));
+        $this->get(route('membership.create'))->assertOk()
+            ->assertViewHas('selectedIndustryIds', array_map('strval', $payload['industry_ids']));
+
+        $this->post(route('membership.store'), $payload)->assertSessionHasNoErrors();
+        $business = Business::query()->where('tax_code', $payload['tax_code'])->firstOrFail();
+        $this->assertCount(5, $business->industries);
+        $this->assertSame($payload['industry_ids'][0], $business->industries->firstWhere('pivot.is_primary', true)->id);
+    }
+
     public function test_business_is_only_a_member_after_association_approval_and_assigned_chapter_receipt(): void
     {
         [$business, $association, $chapterUser] = $this->workflow();

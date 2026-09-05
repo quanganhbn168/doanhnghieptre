@@ -53,7 +53,7 @@ class AssociationHomeService
             'memberBenefitTitle' => $this->memberBenefitTitle(),
             'memberBenefits' => $this->memberBenefits(),
             'upcomingEvents' => $this->events(3, true),
-            'tradePosts' => $this->tradePosts(12),
+            'tradePosts' => $this->tradePosts(6),
         ];
     }
 

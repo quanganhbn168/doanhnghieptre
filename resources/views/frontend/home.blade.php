@@ -110,23 +110,34 @@
         <div class="container mx-auto px-4 sm:px-6 lg:px-8">
             <div class="dnt-trade-panel">
                 <div class="dnt-trade-panel__header">
-                    <h2 id="dnt-trade-title">Cơ hội giao thương</h2>
-                    <a class="dnt-trade-panel__link" href="{{ route('trade.index') }}">Xem tất cả <i class="fa-solid fa-arrow-right" aria-hidden="true"></i></a>
+                    <div>
+                        <h2 id="dnt-trade-title">Chợ doanh nghiệp</h2>
+                        <p>Nhu cầu cần tìm, dịch vụ cung cấp và lời mời hợp tác từ hội viên.</p>
+                    </div>
+                    <a class="dnt-trade-panel__submit" href="{{ $tradeSubmissionUrl }}"><i class="fa-solid fa-plus" aria-hidden="true"></i> {{ $tradeSubmissionLabel }}</a>
                 </div>
                 @if($tradePosts->isNotEmpty())
                     <div class="dnt-trade-list">
                         @foreach($tradePosts as $tradePost)
-                            <article class="dnt-trade-list__item">
-                                <span class="dnt-trade-list__icon"><i class="fa-solid {{ $tradePost->type_icon }}" aria-hidden="true"></i></span>
-                                <div><h3>{{ $tradePost->title }}</h3><p>{{ $tradePost->business_name ?: $tradePost->summary }}</p></div>
-                                <div class="dnt-trade-list__meta"><span>{{ $tradePost->location_label ?: 'Đang cập nhật khu vực' }}</span><strong>{{ $tradePost->budget_label ?: 'Liên hệ trao đổi' }}</strong></div>
-                            </article>
+                            <a class="dnt-trade-list__item" href="{{ route('trade.show', $tradePost->slug) }}" aria-labelledby="home-trade-{{ $tradePost->id }}">
+                                <span class="dnt-trade-list__icon" aria-hidden="true"><i class="fa-solid {{ $tradePost->type_icon }}"></i></span>
+                                <div class="dnt-trade-list__content">
+                                    <h3 id="home-trade-{{ $tradePost->id }}">{{ $tradePost->title }}</h3>
+                                    <p>{{ $tradePost->business_name }}</p>
+                                    @if($tradePost->summary)<p class="dnt-trade-list__summary">{{ $tradePost->summary }}</p>@endif
+                                </div>
+                                <div class="dnt-trade-list__meta">
+                                    @if($tradePost->location_label)<span>{{ $tradePost->location_label }}</span>@endif
+                                    <strong>{{ $tradePost->budget_label ?: 'Liên hệ trao đổi' }}</strong>
+                                </div>
+                                <i class="fa-solid fa-arrow-right dnt-trade-list__arrow" aria-hidden="true"></i>
+                            </a>
                         @endforeach
                     </div>
                 @else
-                    <div class="dnt-empty-card dnt-empty-card--dark"><i class="fa-solid fa-handshake" aria-hidden="true"></i><div><h3>Chưa có cơ hội giao thương được duyệt</h3><p>Các nhu cầu mua bán và hợp tác sẽ xuất hiện tại đây sau khi được xác thực.</p></div></div>
+                    <div class="dnt-empty-card dnt-empty-card--dark"><i class="fa-solid fa-handshake" aria-hidden="true"></i><div><h3>Chưa có tin giao thương</h3><p>Hội viên có thể đăng nhu cầu cần tìm hoặc giới thiệu dịch vụ, sản phẩm đang cung cấp.</p></div></div>
                 @endif
-                <a class="dnt-trade-panel__more" href="{{ route('trade.index') }}">Xem thêm cơ hội giao thương <i class="fa-solid fa-arrow-right" aria-hidden="true"></i></a>
+                <a class="dnt-trade-panel__more" href="{{ route('trade.index') }}">Xem tất cả tin giao thương <i class="fa-solid fa-arrow-right" aria-hidden="true"></i></a>
             </div>
         </div>
     </section>
@@ -143,8 +154,8 @@
                         <article class="dnt-news-feature">
                             <a class="dnt-news-feature__image" href="{{ route('content.show', ['domain' => $article['domain'] ?? 'tin-tuc', 'slug' => $article['slug']]) }}"><img src="{{ $article['image'] }}" alt="{{ $article['title'] }}" loading="lazy" width="800" height="500"></a>
                             <div class="dnt-news-feature__body">
-                                <span>{{ $article['category'] ?: 'Tin tức' }} · {{ $article['date'] }}</span>
                                 <h3><a href="{{ route('content.show', ['domain' => $article['domain'] ?? 'tin-tuc', 'slug' => $article['slug']]) }}">{{ $article['title'] }}</a></h3>
+                                <span>{{ $article['date'] }}</span>
                                 <p>{{ $article['excerpt'] }}</p>
                                 <a class="dnt-news-feature__link" href="{{ route('content.show', ['domain' => $article['domain'] ?? 'tin-tuc', 'slug' => $article['slug']]) }}">Đọc tiếp <i class="fa-solid fa-arrow-right" aria-hidden="true"></i></a>
                             </div>
@@ -160,7 +171,7 @@
                     </div>
                 </div>
             @else
-                <div class="dnt-empty-card"><i class="fa-regular fa-newspaper" aria-hidden="true"></i><div><h3>Chưa có tin tức được xuất bản</h3><p>Bài viết tạo trong mục Posts sẽ tự động hiển thị ở đây.</p></div></div>
+                <div class="dnt-empty-card"><i class="fa-regular fa-newspaper" aria-hidden="true"></i><div><h3>Tin tức đang được cập nhật</h3><p>Các hoạt động và thông tin mới của Hội sẽ được chia sẻ tại đây.</p></div></div>
             @endif
         </div>
     </section>
@@ -189,7 +200,7 @@
             <div class="dnt-membership-cta__panel">
                 <span class="dnt-membership-cta__icon" aria-hidden="true"><i class="fa-solid fa-people-group"></i></span>
                 <div class="dnt-membership-cta__content"><h2 id="dnt-membership-cta-title">Gia nhập cộng đồng doanh nhân trẻ Bắc Ninh</h2><p>Kết nối · Học hỏi · Hợp tác · Phát triển bền vững</p></div>
-                <a class="dnt-membership-cta__button" href="{{ auth()->check() ? route('membership.create') : route('membership.create') }}">Đăng ký hội viên ngay <i class="fa-solid fa-arrow-right" aria-hidden="true"></i></a>
+                <a class="dnt-membership-cta__button" href="{{ route('membership.create') }}">Đăng ký hội viên ngay <i class="fa-solid fa-arrow-right" aria-hidden="true"></i></a>
             </div>
         </div>
     </section>

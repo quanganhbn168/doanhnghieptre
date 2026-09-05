@@ -9,6 +9,7 @@ use App\Filament\Association\Resources\Intros\Pages\CreateIntro;
 use App\Filament\Association\Resources\Posts\Pages\CreatePost;
 use App\Filament\Association\Resources\Posts\Pages\EditPost;
 use App\Filament\Association\Resources\TradePosts\Pages\ViewTradePost;
+use App\Filament\Member\Resources\MyTradePosts\MyTradePostResource;
 use App\Filament\Member\Resources\MyTradePosts\Pages\CreateMyTradePost;
 use App\Filament\Member\Resources\MyTradePosts\Pages\EditMyTradePost;
 use App\Filament\Member\Resources\MyTradePosts\Pages\ListMyTradePosts;
@@ -85,10 +86,12 @@ class AssociationMarketplaceTest extends TestCase
         $this->assertNotNull($post->member_id);
         $this->get(route('trade.show', $post->slug))->assertNotFound();
         $this->get(route('trade.index'))->assertOk()->assertDontSee($post->title);
+        $this->get(route('home'))->assertOk()->assertDontSee($post->title);
         $this->panel($this->staff());
         Livewire::test(ViewTradePost::class, ['record' => $post->id])->callAction('approve')->assertHasNoActionErrors();
         $this->assertSame('approved', $post->fresh()->status);
         $this->get(route('trade.show', $post->slug))->assertOk()->assertSee($post->title)->assertSee('tel:0900000000', false);
+        $this->get(route('home'))->assertOk()->assertSee($post->title)->assertSee(route('trade.show', $post->slug), false);
         $this->get(route('trade.index', ['type' => 'buy']))->assertSee($post->title);
         $this->get(route('trade.index', ['type' => 'sell']))->assertDontSee($post->title);
     }
@@ -107,6 +110,19 @@ class AssociationMarketplaceTest extends TestCase
         Livewire::test(ListMyTradePosts::class)->assertCanNotSeeTableRecords([$post]);
         $this->expectException(ValidationException::class);
         app(TradePostService::class)->submit($user, $this->data($other));
+    }
+
+    public function test_homepage_posting_link_follows_membership_access(): void
+    {
+        $this->get(route('home'))->assertOk()->assertViewHas('tradeSubmissionUrl', route('membership.create'));
+
+        $user = User::factory()->create();
+        $this->actingAs($user, 'web')->get(route('home'))->assertOk()->assertViewHas('tradeSubmissionUrl', route('account.dashboard'));
+
+        $this->business($user);
+        $this->get(route('home'))->assertOk()
+            ->assertViewHas('tradeSubmissionUrl', MyTradePostResource::getUrl('create', panel: 'member'))
+            ->assertSee('Đăng tin giao thương');
     }
 
     public function test_approved_edits_resubmit_and_owner_can_close(): void

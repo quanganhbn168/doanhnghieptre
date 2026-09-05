@@ -189,7 +189,7 @@
             <div class="dnt-membership-cta__panel">
                 <span class="dnt-membership-cta__icon" aria-hidden="true"><i class="fa-solid fa-people-group"></i></span>
                 <div class="dnt-membership-cta__content"><h2 id="dnt-membership-cta-title">Gia nhập cộng đồng doanh nhân trẻ Bắc Ninh</h2><p>Kết nối · Học hỏi · Hợp tác · Phát triển bền vững</p></div>
-                <a class="dnt-membership-cta__button" href="{{ auth()->check() ? route('account.businesses.create') : route('register') }}">Đăng ký hội viên ngay <i class="fa-solid fa-arrow-right" aria-hidden="true"></i></a>
+                <a class="dnt-membership-cta__button" href="{{ auth()->check() ? route('membership.create') : route('membership.create') }}">Đăng ký hội viên ngay <i class="fa-solid fa-arrow-right" aria-hidden="true"></i></a>
             </div>
         </div>
     </section>

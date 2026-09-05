@@ -34,9 +34,9 @@ class AssociationOverview extends Dashboard
     {
         $this->metrics = [
             [
-                'label' => 'Hội viên',
-                'value' => $this->count('members', fn ($query) => $query->where('status', 'approved')),
-                'description' => 'Hồ sơ hội viên đã được duyệt',
+                'label' => 'Hội viên doanh nghiệp',
+                'value' => $this->count('businesses', fn ($query) => $query->where('status', 'approved')),
+                'description' => 'Doanh nghiệp đã được công nhận hội viên',
                 'icon' => 'heroicon-o-users',
             ],
             [

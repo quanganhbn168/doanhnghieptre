@@ -38,7 +38,7 @@ class BusinessForm
                     TextInput::make('slug')->label('Slug')->required()->maxLength(255)->unique(ignoreRecord: true),
                     TextInput::make('tax_code')->label('Mã số thuế')->maxLength(32)->unique(ignoreRecord: true),
                     Select::make('business_category_id')->label('Nhóm doanh nghiệp')->relationship('category', 'name')->searchable()->preload(),
-                    Select::make('business_chapter_id')->label('Thuộc chi hội')->relationship('chapter', 'name')->searchable()->preload(),
+                    Select::make('business_chapter_id')->label('Thuộc chi hội')->relationship('chapter', 'name')->searchable()->preload()->disabled(fn (?Business $record) => $record && in_array($record->status, ['chapter_pending', 'approved'], true)),
                     Select::make('business_size')->label('Quy mô')->options([
                         'small' => 'Quy mô nhỏ',
                         'medium' => 'Quy mô vừa',

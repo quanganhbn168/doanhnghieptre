@@ -21,10 +21,10 @@
 
                     <div class="dnt-header-actions">
                         @auth
-                            <a class="dnt-header-actions__register" href="{{ auth()->user()->member?->status === 'approved' ? url('/thanh-vien') : route('account.dashboard') }}">{{ auth()->user()->member?->status === 'approved' ? 'Cổng doanh nghiệp' : 'Tài khoản' }}</a>
+                            <a class="dnt-header-actions__register" href="{{ auth()->user()->hasApprovedBusiness() ? url('/thanh-vien') : route('account.dashboard') }}">{{ auth()->user()->hasApprovedBusiness() ? 'Cổng doanh nghiệp' : 'Tài khoản' }}</a>
                             <form method="POST" action="{{ route('logout') }}">@csrf <button class="dnt-header-actions__login" type="submit">Đăng xuất</button></form>
                         @else
-                            <a class="dnt-header-actions__register" href="{{ route('register') }}">Tạo tài khoản</a>
+                            <a class="dnt-header-actions__register" href="{{ route('membership.create') }}">Đăng ký hội viên</a>
                             <a class="dnt-header-actions__login" href="{{ route('login') }}">Đăng nhập</a>
                         @endauth
                     </div>
@@ -80,7 +80,7 @@
                                 </ul>
                             @endif
                         </div>
-                        <div class="dnt-main-nav__item has-children"><a class="{{ request()->routeIs('businesses.*', 'directory.*', 'account.businesses.*') ? 'is-active' : '' }}" href="{{ route('directory.index') }}">Hội viên <i class="fa-solid fa-chevron-down" aria-hidden="true"></i></a><ul class="dnt-main-nav__dropdown"><li><a href="{{ route('directory.index') }}">Danh bạ doanh nghiệp</a></li><li><a href="{{ route('home') }}#loi-ich-hoi-vien">Lợi ích hội viên</a></li><li>@auth<a href="{{ route('account.businesses.create') }}">Nộp hồ sơ doanh nghiệp</a>@else<a href="{{ route('register') }}">Đăng ký hội viên</a>@endauth</li></ul></div>
+                        <div class="dnt-main-nav__item has-children"><a class="{{ request()->routeIs('businesses.*', 'directory.*', 'account.businesses.*') ? 'is-active' : '' }}" href="{{ route('directory.index') }}">Hội viên <i class="fa-solid fa-chevron-down" aria-hidden="true"></i></a><ul class="dnt-main-nav__dropdown"><li><a href="{{ route('directory.index') }}">Danh bạ doanh nghiệp</a></li><li><a href="{{ route('home') }}#loi-ich-hoi-vien">Lợi ích hội viên</a></li><li>@auth<a href="{{ route('membership.create') }}">Nộp hồ sơ doanh nghiệp</a>@else<a href="{{ route('membership.create') }}">Đăng ký hội viên</a>@endauth</li></ul></div>
                         <div class="dnt-main-nav__item has-children"><a class="{{ request()->routeIs('businesses.*', 'trade.*') ? 'is-active' : '' }}" href="{{ route('businesses.index') }}">Doanh nghiệp <i class="fa-solid fa-chevron-down" aria-hidden="true"></i></a><ul class="dnt-main-nav__dropdown"><li><a href="{{ route('businesses.index') }}">Hoạt động doanh nghiệp</a></li><li><a href="{{ route('trade.index') }}">Cơ hội giao thương</a></li></ul></div>
                         <div class="dnt-main-nav__item"><a class="{{ request()->routeIs('events.*') ? 'is-active' : '' }}" href="{{ route('events.index') }}">Sự kiện</a></div>
                         <div class="dnt-main-nav__item"><a class="{{ request()->routeIs('news.*') ? 'is-active' : '' }}" href="{{ route('news.index') }}">Tin tức</a></div>
@@ -105,7 +105,7 @@
             <a href="{{ route('trade.index') }}">Giao thương</a>
             <a href="{{ route('news.index') }}">Tin tức</a>
             <a href="{{ route('contact') }}">Liên hệ</a>
-            @auth<a href="{{ auth()->user()->member?->status === 'approved' ? url('/thanh-vien') : route('account.dashboard') }}">{{ auth()->user()->member?->status === 'approved' ? 'Cổng doanh nghiệp' : 'Tài khoản của tôi' }}</a>@else<a href="{{ route('register') }}">Tạo tài khoản</a>@endauth
+            @auth<a href="{{ auth()->user()->hasApprovedBusiness() ? url('/thanh-vien') : route('account.dashboard') }}">{{ auth()->user()->hasApprovedBusiness() ? 'Cổng doanh nghiệp' : 'Tài khoản của tôi' }}</a>@else<a href="{{ route('membership.create') }}">Đăng ký hội viên</a>@endauth
         </nav>
     </div>
 </div>

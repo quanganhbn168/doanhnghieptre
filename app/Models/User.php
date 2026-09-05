@@ -8,6 +8,7 @@ use Filament\Models\Contracts\FilamentUser;
 use Filament\Panel;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
@@ -57,11 +58,19 @@ class User extends Authenticatable implements FilamentUser
     public function canAccessPanel(Panel $panel): bool
     {
         if ($panel->getId() === 'member') {
-            return $this->hasApprovedAccount() && $this->member()->where('status', 'approved')->exists();
+            return $this->hasApprovedAccount() && $this->hasApprovedBusiness();
+        }
+
+        if ($panel->getId() === 'association') {
+            return $this->canReviewAssociation() || $this->canReceiveChapter();
+        }
+
+        if ($this->hasRole(['association_manager', 'chapter_manager'], 'admin') && ! $this->hasRole(['super_admin', 'admin'], 'admin')) {
+            return false;
         }
 
         return $this->hasApprovedAccount()
-            && ($this->hasRole(['super_admin', 'admin'], 'admin') || $this->getAllPermissions()->isNotEmpty());
+            && ($this->hasRole(['super_admin', 'admin'], 'admin') || $this->getAllPermissions()->whereNotIn('name', ['association.review', 'association.manage', 'chapters.receive'])->isNotEmpty());
     }
 
     protected function casts(): array
@@ -102,5 +111,35 @@ class User extends Authenticatable implements FilamentUser
     public function member(): HasOne
     {
         return $this->hasOne(Member::class);
+    }
+
+    public function managedChapters(): BelongsToMany
+    {
+        return $this->belongsToMany(BusinessChapter::class)->withTimestamps();
+    }
+
+    public function hasApprovedBusiness(): bool
+    {
+        return Business::query()->representedBy($this)->where('status', 'approved')->exists();
+    }
+
+    public function canReviewAssociation(): bool
+    {
+        return $this->hasApprovedAccount() && ($this->hasRole(['super_admin', 'admin'], 'admin') || $this->hasPermissionToSafely('association.review'));
+    }
+
+    public function canManageAssociation(): bool
+    {
+        return $this->hasApprovedAccount() && ($this->hasRole(['super_admin', 'admin'], 'admin') || $this->hasPermissionToSafely('association.manage'));
+    }
+
+    public function canReceiveChapter(): bool
+    {
+        return $this->hasApprovedAccount() && $this->hasPermissionToSafely('chapters.receive') && $this->managedChapters()->where('is_active', true)->exists();
+    }
+
+    private function hasPermissionToSafely(string $permission): bool
+    {
+        return $this->getAllPermissions()->contains('name', $permission);
     }
 }

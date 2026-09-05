@@ -18,9 +18,9 @@
                 <label><span>Loại cơ hội</span><select name="type"><option value="">Tất cả cơ hội</option>@foreach($tradeTypes as $value => $label)<option value="{{ $value }}" @selected($activeTradeType === $value)>{{ $label }}</option>@endforeach</select></label>
                 <div class="dnt-directory-filter__actions"><button type="submit">Lọc cơ hội</button>@if($activeTradeType)<a href="{{ route('trade.index') }}">Xóa lọc</a>@endif</div>
                 @auth
-                    <a class="dnt-button dnt-button--dark" href="{{ auth()->user()->member?->status === 'approved' ? url('/thanh-vien/my-trade-posts/create') : route('account.dashboard') }}">Đăng cơ hội</a>
+                    <a class="dnt-button dnt-button--dark" href="{{ auth()->user()->hasApprovedBusiness() ? url('/thanh-vien/my-trade-posts/create') : route('account.dashboard') }}">Đăng cơ hội</a>
                 @else
-                    <a class="dnt-button dnt-button--dark" href="{{ route('register') }}">Đăng ký để đăng cơ hội</a>
+                    <a class="dnt-button dnt-button--dark" href="{{ route('membership.create') }}">Đăng ký để đăng cơ hội</a>
                 @endauth
             </form>
         @endif

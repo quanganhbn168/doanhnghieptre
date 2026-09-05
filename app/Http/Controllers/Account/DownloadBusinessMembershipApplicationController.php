@@ -11,11 +11,14 @@ class DownloadBusinessMembershipApplicationController extends Controller
 {
     public function __invoke(Request $request, Business $business): BinaryFileResponse
     {
-        if (! $request->user('admin')) {
+        $reviewer = $request->user('admin');
+        if ($reviewer) {
+            abort_unless(Business::query()->visibleToReviewer($reviewer)->whereKey($business->id)->exists(), 403);
+        } else {
             $user = $request->user('web');
-            $isSubmitter = $business->submitted_by_user_id === $user?->id;
-            $isLinkedMember = $user?->member
-                && $business->members()->whereKey($user->member->id)->exists();
+            $isSubmitter = $user && $user->hasApprovedAccount() && $business->submitted_by_user_id === $user->id;
+            $isLinkedMember = $user?->hasApprovedAccount() && $user?->member
+                && $business->members()->whereKey($user->member->id)->wherePivot('status', 'active')->exists();
 
             abort_unless($isSubmitter || $isLinkedMember, 403);
         }

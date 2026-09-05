@@ -1,20 +1,19 @@
 @extends('layouts.master')
 
-@section('title', $mode === 'create' ? 'Đăng ký doanh nghiệp | DNT Bắc Ninh' : 'Bổ sung hồ sơ doanh nghiệp | DNT Bắc Ninh')
+@section('title', $mode === 'create' ? 'Đăng ký hội viên | DNT Bắc Ninh' : 'Bổ sung hồ sơ hội viên | DNT Bắc Ninh')
 @section('meta_description', 'Gửi hồ sơ doanh nghiệp để kết nối với Hội Doanh nhân trẻ Bắc Ninh.')
 @section('robots', 'noindex, nofollow')
 
 @section('content')
-    @php($signedMembershipApplication = $business->getFirstMedia('signed_membership_application'))
     <div class="dnt-application-page">
         <div class="container mx-auto px-4 sm:px-6 lg:px-8">
             <div class="dnt-application-page__heading">
-                <a class="dnt-text-link" href="{{ route('account.dashboard') }}"><i class="fa-solid fa-arrow-left" aria-hidden="true"></i> Quay lại tài khoản</a>
-                <h1>{{ $mode === 'edit' ? 'Bổ sung hồ sơ doanh nghiệp' : 'Đăng ký doanh nghiệp' }}</h1>
-                <p>Hồ sơ được Hội kiểm tra trước khi xuất hiện trên danh bạ. Khi hồ sơ được duyệt, người đại diện nộp hồ sơ sẽ trở thành hội viên.</p>
+                <a class="dnt-text-link" href="{{ auth()->check() ? route('account.dashboard') : route('home') }}"><i class="fa-solid fa-arrow-left" aria-hidden="true"></i> {{ auth()->check() ? 'Theo dõi hồ sơ' : 'Trang chủ' }}</a>
+                <h1>{{ $mode === 'edit' ? 'Bổ sung hồ sơ hội viên' : 'Đăng ký hội viên' }}</h1>
+                <p>Mỗi hội viên là một doanh nghiệp. Gửi thông tin và đơn gia nhập Hội tại đây; Hội xét duyệt, sau đó Chi hội tiếp nhận doanh nghiệp.</p>
             </div>
 
-            <form class="dnt-business-application" method="POST" action="{{ $mode === 'edit' ? route('account.businesses.update', $business) : route('account.businesses.store') }}" enctype="multipart/form-data">
+            <form class="dnt-business-application" method="POST" action="{{ $mode === 'edit' ? route('account.businesses.update', $business) : route('membership.store') }}" enctype="multipart/form-data">
                 @csrf
                 @if($mode === 'edit') @method('PATCH') @endif
 
@@ -40,8 +39,8 @@
                     <div class="dnt-business-application__grid">
                         <label><span>Nhóm doanh nghiệp</span><select class="ui-select" name="business_category_id"><option value="">Chọn nhóm</option>@foreach($categories as $category)<option value="{{ $category->id }}" @selected((string) old('business_category_id', $business->business_category_id) === (string) $category->id)>{{ $category->name }}</option>@endforeach</select></label>
                         <label><span>Quy mô <b>*</b></span><select class="ui-select" name="business_size" required><option value="">Chọn quy mô</option>@foreach(['small' => 'Quy mô nhỏ', 'medium' => 'Quy mô vừa', 'large' => 'Quy mô lớn'] as $value => $label)<option value="{{ $value }}" @selected(old('business_size', $business->business_size) === $value)>{{ $label }}</option>@endforeach</select></label>
-                        <label class="dnt-business-application__full"><span>Nhóm nghề nghiệp <b>*</b></span><select class="ui-select" name="industry_ids[]" multiple required size="6">@foreach($industries as $industry)<option value="{{ $industry->id }}" @selected(in_array((string) $industry->id, $selectedIndustryIds, true))>{{ $industry->name }}</option>@endforeach</select><small>Danh mục có 17 nhóm nghề nghiệp và 01 nhóm Khác. Chọn từ 1 đến tối đa 5 nhóm; nhóm đầu tiên là nhóm chính.</small></label>
-                        <label class="dnt-business-application__full"><span>Chức danh của người đại diện</span><input class="ui-input" name="job_title" value="{{ old('job_title', $business->representative_job_title) }}" placeholder="Ví dụ: Giám đốc điều hành"></label>
+                        <label class="dnt-business-application__full"><span>Nhóm nghề nghiệp <b>*</b></span><select class="ui-select" name="industry_ids[]" multiple required size="6">@foreach($industries as $industry)<option value="{{ $industry->id }}" @selected(in_array((string) $industry->id, $selectedIndustryIds, true))>{{ $industry->name }}</option>@endforeach</select><small>Chọn từ 1 đến tối đa 5 nhóm; nhóm đầu tiên là nhóm chính.</small></label>
+                        <label class="dnt-business-application__full"><span>Chi hội mong muốn tham gia</span><select class="ui-select" name="business_chapter_id"><option value="">Để Hội phân công Chi hội phù hợp</option>@foreach($chapters as $chapter)<option value="{{ $chapter->id }}" @selected((string) old('business_chapter_id', $business->business_chapter_id) === (string) $chapter->id)>{{ $chapter->name }}</option>@endforeach</select><small>Hội xác nhận Chi hội tiếp nhận khi duyệt hồ sơ.</small></label>
                     </div>
                 </section>
 
@@ -68,10 +67,26 @@
                     <label><span>Thông tin giới thiệu <b>*</b></span><textarea class="ui-input" name="summary" required maxlength="1000">{{ old('summary', $business->summary) }}</textarea><small>Tối đa 1.000 ký tự; nội dung này sẽ được Hội sử dụng để giới thiệu trong danh bạ.</small></label>
                 </section>
 
+                <section>
+                    <div class="dnt-business-application__section-head">
+                        <h2>Người đại diện doanh nghiệp</h2>
+                        <p>Người đại diện theo dõi hồ sơ và làm việc với Hội thay mặt doanh nghiệp.</p>
+                    </div>
+                    <div class="dnt-business-application__grid">
+                        <label><span>Họ và tên người đại diện <b>*</b></span><input class="ui-input" name="representative_name" value="{{ old('representative_name', $business->representative_name ?: auth()->user()?->name) }}" required autocomplete="name" maxlength="255"></label>
+                        <label><span>Chức danh</span><input class="ui-input" name="job_title" value="{{ old('job_title', $business->representative_job_title) }}" placeholder="Ví dụ: Giám đốc điều hành"></label>
+                        @guest
+                            <label class="dnt-business-application__full"><span>Email đăng nhập theo dõi hồ sơ <b>*</b></span><input class="ui-input" name="login_email" type="email" value="{{ old('login_email') }}" required autocomplete="username"><small>Đã có thông tin đăng nhập? <a class="dnt-text-link" href="{{ route('login') }}">Đăng nhập để dùng lại</a>.</small></label>
+                            <label><span>Mật khẩu <b>*</b></span><input class="ui-input" name="password" type="password" required minlength="8" autocomplete="new-password"><small>Tối thiểu 8 ký tự. Dùng để theo dõi và bổ sung hồ sơ ngay sau khi gửi.</small></label>
+                            <label><span>Nhập lại mật khẩu <b>*</b></span><input class="ui-input" name="password_confirmation" type="password" required minlength="8" autocomplete="new-password"></label>
+                        @endguest
+                    </div>
+                </section>
+
                 <section class="dnt-business-application__membership-application">
                     <div class="dnt-business-application__section-head">
                         <h2>Đơn gia nhập Hội</h2>
-                        <p>Hoàn tất đủ ba bước trước khi gửi hồ sơ để Hội kiểm tra.</p>
+                        <p>Tải mẫu đơn, ký và đóng dấu, sau đó gửi bản chụp hoặc bản quét cùng hồ sơ.</p>
                     </div>
                     <div class="dnt-business-application__document-grid">
                         <div class="dnt-business-application__template">
@@ -96,7 +111,7 @@
 
                 <div class="dnt-business-application__footer">
                     <label class="dnt-business-application__confirm"><input name="confirm_information" type="checkbox" value="1" @checked(old('confirm_information')) required> <span>Tôi xác nhận thông tin doanh nghiệp là chính xác và đồng ý để Hội liên hệ xác thực.</span></label>
-                    <div class="dnt-business-application__actions"><a class="dnt-button dnt-button--outline-dark" href="{{ route('account.dashboard') }}">Hủy</a><button class="dnt-button dnt-button--dark" type="submit">{{ $mode === 'edit' ? 'Gửi lại để duyệt' : 'Gửi hồ sơ doanh nghiệp' }} <i class="fa-solid fa-arrow-right" aria-hidden="true"></i></button></div>
+                    <div class="dnt-business-application__actions"><a class="dnt-button dnt-button--outline-dark" href="{{ auth()->check() ? route('account.dashboard') : route('home') }}">Quay lại</a><button class="dnt-button dnt-button--dark" type="submit">{{ $mode === 'edit' ? 'Gửi lại để duyệt' : 'Gửi đơn đăng ký hội viên' }} <i class="fa-solid fa-arrow-right" aria-hidden="true"></i></button></div>
                 </div>
             </form>
         </div>

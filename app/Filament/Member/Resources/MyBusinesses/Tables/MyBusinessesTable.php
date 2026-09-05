@@ -19,7 +19,7 @@ class MyBusinessesTable
                 TextColumn::make('business_size')->label('Quy mô')->formatStateUsing(fn (?string $state): string => [
                     'small' => 'Nhỏ', 'medium' => 'Vừa', 'large' => 'Lớn',
                 ][$state] ?? '—'),
-                TextColumn::make('status')->label('Trạng thái')->badge()->color(fn (string $state): string => match ($state) {
+                TextColumn::make('status')->label('Trạng thái')->formatStateUsing(fn (string $state) => Business::STATUS_LABELS[$state] ?? $state)->badge()->color(fn (string $state): string => match ($state) {
                     'approved' => 'success', 'pending' => 'warning', 'rejected' => 'danger', default => 'gray',
                 }),
                 TextColumn::make('updated_at')->label('Cập nhật')->since()->sortable(),

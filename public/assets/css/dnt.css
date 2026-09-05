@@ -538,6 +538,7 @@
 .dnt-account-business-card__actions .dnt-button { min-height: 40px; padding-inline: 15px; }
 .dnt-status { display: inline-flex; align-items: center; min-height: 24px; padding: 3px 9px; border-radius: 999px; font-size: 12px; font-weight: 800; white-space: nowrap; }
 .dnt-status--pending { color: #805900; background: #fff4c7; }
+.dnt-status--chapter_pending { color: #175b86; background: #e6f3fc; }
 .dnt-status--approved { color: #0e5b3f; background: #dff6e9; }
 .dnt-status--rejected { color: #a21925; background: var(--dnt-brand-red-soft); }
 .dnt-status--draft { color: var(--dnt-muted); background: #f0eeee; }

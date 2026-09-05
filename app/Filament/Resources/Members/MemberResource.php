@@ -7,10 +7,12 @@ use App\Filament\Resources\Members\Pages\EditMember;
 use App\Filament\Resources\Members\Pages\ListMembers;
 use App\Models\Member;
 use BackedEnum;
+use Filament\Actions\DeleteAction;
+use Filament\Actions\EditAction;
 use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\Select;
-use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Textarea;
+use Filament\Forms\Components\TextInput;
 use Filament\Resources\Resource;
 use Filament\Schemas\Components\Section;
 use Filament\Schemas\Schema;
@@ -25,11 +27,11 @@ class MemberResource extends Resource
 
     protected static string|BackedEnum|null $navigationIcon = 'heroicon-o-users';
 
-    protected static ?string $navigationLabel = 'Hội viên';
+    protected static ?string $navigationLabel = 'Người đại diện';
 
-    protected static ?string $modelLabel = 'hội viên';
+    protected static ?string $modelLabel = 'người đại diện';
 
-    protected static ?string $pluralModelLabel = 'hội viên';
+    protected static ?string $pluralModelLabel = 'người đại diện';
 
     protected static string|UnitEnum|null $navigationGroup = 'Quản lý Hội';
 
@@ -41,7 +43,7 @@ class MemberResource extends Resource
             Section::make('Hồ sơ hội viên')
                 ->schema([
                     Select::make('user_id')->label('Tài khoản đăng nhập')->relationship('user', 'email')->searchable()->preload(),
-                    TextInput::make('member_code')->label('Mã hội viên')->required()->maxLength(80)->unique(ignoreRecord: true),
+                    TextInput::make('member_code')->label('Mã người đại diện')->required()->maxLength(80)->unique(ignoreRecord: true),
                     TextInput::make('full_name')->label('Họ và tên')->required()->maxLength(255),
                     TextInput::make('email')->label('Email')->email()->maxLength(255),
                     TextInput::make('phone')->label('Số điện thoại')->tel()->maxLength(30),
@@ -71,8 +73,8 @@ class MemberResource extends Resource
     {
         return $table
             ->columns([
-                TextColumn::make('member_code')->label('Mã hội viên')->searchable()->sortable(),
-                TextColumn::make('full_name')->label('Hội viên')->searchable()->sortable()->description(fn (Member $record): ?string => $record->email),
+                TextColumn::make('member_code')->label('Mã người đại diện')->searchable()->sortable(),
+                TextColumn::make('full_name')->label('Người đại diện')->searchable()->sortable()->description(fn (Member $record): ?string => $record->email),
                 TextColumn::make('phone')->label('Điện thoại')->placeholder('—')->toggleable(),
                 TextColumn::make('user.email')->label('Tài khoản')->placeholder('Chưa liên kết')->toggleable(isToggledHiddenByDefault: true),
                 TextColumn::make('status')->label('Trạng thái')->badge()->color(fn (string $state): string => match ($state) {
@@ -85,8 +87,8 @@ class MemberResource extends Resource
                 ]),
             ])
             ->recordActions([
-                \Filament\Actions\EditAction::make(),
-                \Filament\Actions\DeleteAction::make(),
+                EditAction::make(),
+                DeleteAction::make(),
             ]);
     }
 

@@ -33,10 +33,20 @@ class MyBusinessResource extends Resource
 
     public static function getEloquentQuery(): Builder
     {
-        $memberId = auth('web')->user()?->member?->id;
+        $user = auth('web')->user();
 
         return parent::getEloquentQuery()
-            ->when($memberId, fn (Builder $query) => $query->whereHas('members', fn (Builder $members) => $members->whereKey($memberId)), fn (Builder $query) => $query->whereRaw('1 = 0'));
+            ->when($user, fn (Builder $query) => $query->representedBy($user), fn (Builder $query) => $query->whereRaw('1 = 0'));
+    }
+
+    public static function canCreate(): bool
+    {
+        return false;
+    }
+
+    public static function canEdit($record): bool
+    {
+        return in_array($record->status, ['approved', 'draft', 'rejected'], true) && static::getEloquentQuery()->whereKey($record->id)->exists();
     }
 
     public static function form(Schema $schema): Schema

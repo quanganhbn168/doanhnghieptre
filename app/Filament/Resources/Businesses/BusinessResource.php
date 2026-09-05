@@ -21,7 +21,7 @@ class BusinessResource extends Resource
 
     protected static string|BackedEnum|null $navigationIcon = 'heroicon-o-building-office-2';
 
-    protected static ?string $navigationLabel = 'Doanh nghiệp';
+    protected static ?string $navigationLabel = 'Hội viên doanh nghiệp';
 
     protected static ?string $modelLabel = 'doanh nghiệp';
 

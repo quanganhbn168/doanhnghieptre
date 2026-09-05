@@ -2,7 +2,6 @@
 
 namespace Tests\Feature;
 
-use App\Actions\AccountApprovals\ApproveAccount;
 use App\Models\Business;
 use App\Models\BusinessChapter;
 use App\Models\Industry;
@@ -12,12 +11,20 @@ use App\Services\SiteChromeCache;
 use Database\Seeders\DntFoundationSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Storage;
 use Spatie\Permission\Models\Role;
 use Tests\TestCase;
 
 class DntAssociationContentTest extends TestCase
 {
     use RefreshDatabase;
+
+    protected function setUp(): void
+    {
+        parent::setUp();
+        Storage::fake('local');
+        Storage::fake('public_media');
+    }
 
     public function test_foundation_data_contains_nine_active_chapters_and_eighteen_professional_groups(): void
     {
@@ -27,6 +34,7 @@ class DntAssociationContentTest extends TestCase
         $this->assertSame(18, Industry::query()->memberGroups()->where('is_active', true)->count());
         $this->assertTrue(Industry::query()->memberGroups()->where('slug', 'khac')->exists());
         $this->assertSame('approved', User::query()->where('email', 'hoi-vien.demo@dnt-seed.example')->value('approval_status'));
+        $this->assertSame(0, Business::query()->where('status', 'approved')->whereNull('membership_code')->count());
     }
 
     public function test_about_page_renders_the_managed_organization_intro(): void
@@ -97,9 +105,9 @@ class DntAssociationContentTest extends TestCase
         ]);
 
         $this->actingAs($user)
-            ->get(route('account.businesses.create'))
+            ->get(route('membership.create'))
             ->assertOk()
-            ->assertSee('Đăng ký doanh nghiệp')
+            ->assertSee('Đăng ký hội viên')
             ->assertSee('Nhóm nghề nghiệp')
             ->assertSee(asset('downloads/don-gia-nhap-hoi-082026.docx'), false)
             ->assertSee('Tải bản đơn đã ký, đóng dấu');
@@ -107,6 +115,7 @@ class DntAssociationContentTest extends TestCase
         $this->actingAs($user)
             ->post(route('account.businesses.store'), [
                 'name' => 'Công ty Kiểm thử',
+                'representative_name' => 'Người đại diện kiểm thử',
                 'tax_code' => 'DNT-TEST-001',
                 'business_type' => 'limited',
                 'business_size' => 'small',
@@ -140,61 +149,12 @@ class DntAssociationContentTest extends TestCase
             ->assertDownload('don-gia-nhap-hoi-da-ky-'.$business->id.'.pdf');
 
         $admin = User::factory()->create();
+        Role::findOrCreate('super_admin', 'admin');
+        $admin->assignRole('super_admin');
         $this->actingAs($admin, 'admin')
             ->get(route('business.membership-application.download', $business))
             ->assertOk()
             ->assertDownload('don-gia-nhap-hoi-da-ky-'.$business->id.'.pdf');
-    }
-
-    public function test_register_page_offers_password_visibility_controls(): void
-    {
-        $this->get(route('register'))
-            ->assertOk()
-            ->assertSee('data-password-toggle="password"', false)
-            ->assertSee('data-password-toggle="password_confirmation"', false);
-    }
-
-    public function test_newly_registered_accounts_wait_for_approval_before_they_can_log_in(): void
-    {
-        $credentials = [
-            'name' => 'Tài khoản chờ duyệt',
-            'email' => 'cho-duyet@example.test',
-            'phone' => '0966234999',
-            'password' => 'password',
-            'password_confirmation' => 'password',
-        ];
-
-        $this->post(route('register'), $credentials)
-            ->assertRedirect(route('login'))
-            ->assertSessionHas('status', 'Tài khoản đã được ghi nhận và đang chờ Hội phê duyệt. Anh/chị sẽ nhận được quyền đăng nhập sau khi được duyệt.');
-
-        $account = User::query()->where('email', $credentials['email'])->firstOrFail();
-
-        $this->assertSame('pending', $account->approval_status);
-        $this->assertFalse($account->is_active);
-        $this->assertGuest();
-
-        $this->actingAs($account)
-            ->get(route('account.dashboard'))
-            ->assertRedirect(route('login'));
-
-        $this->assertGuest();
-
-        $this->post(route('login'), [
-            'email' => $credentials['email'],
-            'password' => $credentials['password'],
-        ])->assertSessionHasErrors('email');
-
-        $this->assertGuest();
-
-        app(ApproveAccount::class)($account, $account->id);
-
-        $this->post(route('login'), [
-            'email' => $credentials['email'],
-            'password' => $credentials['password'],
-        ])->assertRedirect(route('account.dashboard'));
-
-        $this->assertAuthenticatedAs($account);
     }
 
     public function test_association_content_resources_and_professional_group_picker_are_available_to_the_admin(): void
@@ -207,7 +167,7 @@ class DntAssociationContentTest extends TestCase
         $this->actingAs($admin, 'admin')->get('/admin/intros/create')->assertOk()->assertSee('Tiêu đề')->assertDontSee('Loại nội dung');
         $this->actingAs($admin, 'admin')->get('/admin/professional-groups')->assertOk()->assertSee('Nhóm nghề nghiệp');
         $this->actingAs($admin, 'admin')->get('/admin/business-chapters')->assertOk()->assertSee('Chi hội');
-        $this->actingAs($admin, 'admin')->get('/admin/account-approvals')->assertOk()->assertSee('Tài khoản chờ duyệt');
+        $this->actingAs($admin, 'admin')->get('/admin/account-approvals')->assertOk();
         $this->actingAs($admin, 'admin')->get('/admin/businesses/create')->assertOk()->assertSee('Nhóm nghề nghiệp');
     }
 }

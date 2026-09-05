@@ -31,6 +31,6 @@
 
     <div class="dnt-auth-card__footer">
         @if(Route::has('password.request'))<a href="{{ route('password.request') }}">Quên mật khẩu?</a>@endif
-        <p>Chưa có tài khoản? <a href="{{ route('register') }}">Tạo tài khoản</a></p>
+        <p>Doanh nghiệp chưa là hội viên? <a href="{{ route('membership.create') }}">Đăng ký hội viên</a></p>
     </div>
 @endsection

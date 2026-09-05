@@ -22,7 +22,7 @@ class DashboardController extends Controller
                 $query->where('submitted_by_user_id', $user->id);
 
                 if ($member) {
-                    $query->orWhereHas('members', fn ($members) => $members->whereKey($member->id));
+                    $query->orWhereHas('members', fn ($members) => $members->whereKey($member->id)->where('business_members.status', 'active'));
                 }
             })
             ->latest()
@@ -37,6 +37,10 @@ class DashboardController extends Controller
                 ->limit(6)
                 ->get();
 
-        return view('account.dashboard', compact('user', 'member', 'businesses', 'histories'));
+        return view('account.dashboard', [
+            ...compact('user', 'member', 'businesses', 'histories'),
+            'statusLabels' => Business::STATUS_LABELS,
+            'hasApprovedBusiness' => $businesses->contains('status', 'approved'),
+        ]);
     }
 }

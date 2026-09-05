@@ -16,6 +16,8 @@ use UnitEnum;
 
 class AccountApprovalResource extends Resource
 {
+    protected static bool $shouldRegisterNavigation = false;
+
     protected static ?string $model = User::class;
 
     protected static string|BackedEnum|null $navigationIcon = 'heroicon-o-user-plus';

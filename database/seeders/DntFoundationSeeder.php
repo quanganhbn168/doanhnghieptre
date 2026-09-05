@@ -412,6 +412,12 @@ class DntFoundationSeeder extends Seeder
                 'approved_at' => $status === 'approved' ? $now->copy()->subDays(45 - $index) : null,
             ], $now);
 
+            if ($status === 'approved') {
+                DB::table('businesses')->where('id', $ids[$business['slug']])->whereNull('membership_code')->update([
+                    'membership_code' => 'DNTBN-DN-'.str_pad((string) $ids[$business['slug']], 6, '0', STR_PAD_LEFT),
+                ]);
+            }
+
             if ($memberCode) {
                 $this->upsert('business_members', [
                     'business_id' => $ids[$business['slug']],

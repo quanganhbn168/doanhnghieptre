@@ -17,6 +17,8 @@ class MembersRelationManager extends RelationManager
 {
     protected static string $relationship = 'members';
 
+    protected static ?string $title = 'Người đại diện';
+
     protected static ?string $recordTitleAttribute = 'full_name';
 
     public function form(Schema $schema): Schema
@@ -28,8 +30,8 @@ class MembersRelationManager extends RelationManager
     {
         return $table
             ->columns([
-                TextColumn::make('member_code')->label('Mã hội viên')->searchable(),
-                TextColumn::make('full_name')->label('Hội viên')->searchable()->description(fn ($record): ?string => $record->email),
+                TextColumn::make('member_code')->label('Mã người đại diện')->searchable(),
+                TextColumn::make('full_name')->label('Người đại diện')->searchable()->description(fn ($record): ?string => $record->email),
                 TextColumn::make('pivot.role')->label('Vai trò')->formatStateUsing(fn (?string $state): string => [
                     'representative' => 'Đại diện',
                     'owner' => 'Chủ sở hữu',
@@ -41,11 +43,11 @@ class MembersRelationManager extends RelationManager
             ])
             ->headerActions([
                 AttachAction::make()
-                    ->label('Liên kết hội viên')
+                    ->label('Liên kết người đại diện')
                     ->preloadRecordSelect()
                     ->recordSelectSearchColumns(['full_name', 'member_code', 'email'])
                     ->schema(fn (AttachAction $action): array => [
-                        $action->getRecordSelect()->label('Hội viên')->required(),
+                        $action->getRecordSelect()->label('Người đại diện')->required(),
                         Select::make('role')->label('Vai trò')->options([
                             'representative' => 'Đại diện',
                             'owner' => 'Chủ sở hữu',

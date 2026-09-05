@@ -18,9 +18,9 @@ class MemberBusinessOverview extends StatsOverviewWidget
         $tradePosts = TradePost::query()->where('member_id', $memberId);
 
         return [
-            Stat::make('Doanh nghiệp', (clone $query)->count())->description('Doanh nghiệp đang liên kết với hội viên'),
+            Stat::make('Doanh nghiệp', (clone $query)->count())->description('Doanh nghiệp do anh/chị đại diện'),
             Stat::make('Đang công bố', (clone $query)->where('status', 'approved')->count())->description('Hiển thị trên danh bạ')->color('success'),
-            Stat::make('Chờ Hội duyệt', (clone $query)->where('status', 'pending')->count())->description('Hồ sơ mới hoặc vừa cập nhật')->color('warning'),
+            Stat::make('Chờ Hội duyệt', (clone $query)->whereIn('status', ['pending', 'chapter_pending'])->count())->description('Hồ sơ mới hoặc vừa cập nhật')->color('warning'),
             Stat::make('Cơ hội giao thương', (clone $tradePosts)->where('status', 'approved')->count())->description('Đang hiển thị công khai')->color('primary'),
         ];
     }

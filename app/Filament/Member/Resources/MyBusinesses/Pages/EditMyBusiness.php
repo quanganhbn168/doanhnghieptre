@@ -3,9 +3,11 @@
 namespace App\Filament\Member\Resources\MyBusinesses\Pages;
 
 use App\Filament\Member\Resources\MyBusinesses\MyBusinessResource;
+use App\Models\Business;
 use App\Services\BusinessService;
 use Filament\Resources\Pages\EditRecord;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\DB;
 
 class EditMyBusiness extends EditRecord
 {
@@ -13,15 +15,18 @@ class EditMyBusiness extends EditRecord
 
     protected function handleRecordUpdate(Model $record, array $data): Model
     {
-        app(BusinessService::class)->update($record, $data);
+        DB::transaction(function () use ($record, $data): void {
+            $locked = Business::query()->lockForUpdate()->findOrFail($record->id);
+            abort_unless(MyBusinessResource::canEdit($locked), 403);
+            app(BusinessService::class)->update($locked, $data);
+            $locked->transitionTo('pending', auth('web')->id(), 'Người đại diện cập nhật hồ sơ; gửi lại để Hội duyệt và Chi hội tiếp nhận.');
+        });
 
         return $record->refresh();
     }
 
-    protected function afterSave(): void
+    protected function getRedirectUrl(): string
     {
-        if ($this->record->status !== 'pending') {
-            $this->record->transitionTo('pending', auth('web')->id(), 'Hội viên đã cập nhật hồ sơ doanh nghiệp và gửi lại để Hội kiểm tra.');
-        }
+        return route('account.dashboard');
     }
 }

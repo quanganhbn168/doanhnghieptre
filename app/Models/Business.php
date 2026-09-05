@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
@@ -12,6 +13,14 @@ use Spatie\MediaLibrary\InteractsWithMedia;
 class Business extends Model implements HasMedia
 {
     use InteractsWithMedia;
+
+    public const STATUS_LABELS = [
+        'draft' => 'Bản nháp',
+        'pending' => 'Chờ Hội duyệt',
+        'chapter_pending' => 'Chờ Chi hội tiếp nhận',
+        'approved' => 'Hội viên chính thức',
+        'rejected' => 'Cần bổ sung',
+    ];
 
     protected $fillable = [
         'business_category_id',
@@ -36,6 +45,7 @@ class Business extends Model implements HasMedia
         'is_featured',
         'submitted_by_user_id',
         'representative_job_title',
+        'representative_name',
         'approved_at',
     ];
 
@@ -46,6 +56,7 @@ class Business extends Model implements HasMedia
             'location' => 'array',
             'is_featured' => 'boolean',
             'approved_at' => 'datetime',
+            'association_approved_at' => 'datetime',
         ];
     }
 
@@ -76,9 +87,33 @@ class Business extends Model implements HasMedia
         return $this->belongsTo(User::class, 'submitted_by_user_id');
     }
 
+    public function representativeDisplayName(): ?string
+    {
+        return $this->representative_name ?: ($this->submittedBy?->name ?: $this->members->firstWhere('pivot.is_primary', true)?->full_name);
+    }
+
+    public function scopeRepresentedBy(Builder $query, User $user): Builder
+    {
+        return $query->where(function (Builder $query) use ($user): void {
+            $query->where('submitted_by_user_id', $user->id)
+                ->orWhereHas('members', fn (Builder $members) => $members->where('user_id', $user->id)->where('business_members.status', 'active'));
+        });
+    }
+
+    public function scopeVisibleToReviewer(Builder $query, User $user): Builder
+    {
+        if ($user->canReviewAssociation()) {
+            return $query;
+        }
+
+        return $query->whereIn('business_chapter_id', $user->managedChapters()->where('is_active', true)->select('business_chapters.id'))
+            ->whereIn('status', ['chapter_pending', 'approved', 'rejected'])
+            ->when(! $user->canReceiveChapter(), fn (Builder $query) => $query->whereRaw('1 = 0'));
+    }
+
     public function statusHistories(): HasMany
     {
-        return $this->hasMany(BusinessStatusHistory::class)->latest('changed_at');
+        return $this->hasMany(BusinessStatusHistory::class)->latest('changed_at')->latest('id');
     }
 
     public function transitionTo(string $status, ?int $changedBy = null, ?string $reason = null): void
@@ -92,6 +127,11 @@ class Business extends Model implements HasMedia
         } elseif ($status !== 'approved') {
             $attributes['approved_at'] = null;
             $attributes['approved_by'] = null;
+        }
+
+        if (in_array($status, ['draft', 'pending', 'rejected'], true)) {
+            $attributes['association_approved_at'] = null;
+            $attributes['association_approved_by'] = null;
         }
 
         $this->forceFill($attributes)->save();

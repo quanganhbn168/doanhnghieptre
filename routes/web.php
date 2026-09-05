@@ -7,9 +7,13 @@ use App\Http\Controllers\Auth\AuthController;
 use App\Http\Controllers\Frontend;
 use Illuminate\Support\Facades\Route;
 
+Route::get('/dang-ky-hoi-vien', [BusinessApplicationController::class, 'create'])->name('membership.create');
+Route::post('/dang-ky-hoi-vien', [BusinessApplicationController::class, 'store'])->middleware('throttle:frontend-forms')->name('membership.store');
+Route::redirect('/register', '/dang-ky-hoi-vien')->name('register');
+
 Route::middleware(['auth', 'account.approved'])->prefix('tai-khoan')->as('account.')->group(function (): void {
     Route::get('/', DashboardController::class)->name('dashboard');
-    Route::get('/doanh-nghiep/dang-ky', [BusinessApplicationController::class, 'create'])->name('businesses.create');
+    Route::get('/doanh-nghiep/dang-ky', fn () => to_route('membership.create'))->name('businesses.create');
     Route::post('/doanh-nghiep', [BusinessApplicationController::class, 'store'])->middleware('throttle:frontend-forms')->name('businesses.store');
     Route::get('/doanh-nghiep/{business}/chinh-sua', [BusinessApplicationController::class, 'edit'])->name('businesses.edit');
     Route::patch('/doanh-nghiep/{business}', [BusinessApplicationController::class, 'update'])->middleware('throttle:frontend-forms')->name('businesses.update');

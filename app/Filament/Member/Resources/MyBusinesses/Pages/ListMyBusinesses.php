@@ -3,7 +3,7 @@
 namespace App\Filament\Member\Resources\MyBusinesses\Pages;
 
 use App\Filament\Member\Resources\MyBusinesses\MyBusinessResource;
-use Filament\Actions\CreateAction;
+use Filament\Actions\Action;
 use Filament\Resources\Pages\ListRecords;
 
 class ListMyBusinesses extends ListRecords
@@ -12,6 +12,6 @@ class ListMyBusinesses extends ListRecords
 
     protected function getHeaderActions(): array
     {
-        return [CreateAction::make()->label('Thêm doanh nghiệp')];
+        return [Action::make('apply')->label('Đăng ký doanh nghiệp hội viên')->url(route('membership.create'))];
     }
 }

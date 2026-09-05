@@ -16,6 +16,7 @@ class RoleAndPermissionSeeder extends Seeder
      */
     public function run(): void
     {
+        $this->call(AssociationRoleSeeder::class);
         // Reset cached roles and permissions
         app()[PermissionRegistrar::class]->forgetCachedPermissions();
 

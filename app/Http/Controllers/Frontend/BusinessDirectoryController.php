@@ -3,9 +3,11 @@
 namespace App\Http\Controllers\Frontend;
 
 use App\Http\Controllers\Controller;
+use App\Support\BusinessPresentation;
 use Illuminate\Database\Query\Builder;
 use Illuminate\Http\Request;
 use Illuminate\Pagination\LengthAwarePaginator;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\Storage;
@@ -13,21 +15,15 @@ use Illuminate\View\View;
 
 class BusinessDirectoryController extends Controller
 {
-    /** @var array<string, string> */
-    private const BUSINESS_SIZES = [
-        'small' => 'Quy mô nhỏ',
-        'medium' => 'Quy mô vừa',
-        'large' => 'Quy mô lớn',
-    ];
-
     public function index(Request $request): View
     {
         $filters = $request->validate([
             'q' => ['nullable', 'string', 'max:100'],
             'industry' => ['nullable', 'string', 'max:150'],
-            'size' => ['nullable', 'in:'.implode(',', array_keys(self::BUSINESS_SIZES))],
+            'size' => ['nullable', 'in:'.implode(',', array_keys(BusinessPresentation::SIZES))],
             'chapter' => ['nullable', 'string', 'max:150'],
         ]);
+        $filters = array_filter(array_map(fn ($value) => trim((string) $value), $filters), fn (string $value) => $value !== '');
 
         $industries = Schema::hasTable('industries')
             ? DB::table('industries')->where('is_active', true)->where('is_member_group', true)->orderBy('sort_order')->orderBy('name')->get(['name', 'slug'])
@@ -40,9 +36,26 @@ class BusinessDirectoryController extends Controller
             'businesses' => $this->businesses($filters),
             'industries' => $industries,
             'chapters' => $chapters,
-            'sizeOptions' => self::BUSINESS_SIZES,
+            'sizeOptions' => BusinessPresentation::SIZES,
             'filters' => $filters,
+            'activeFilters' => $this->activeFilters($filters, $industries, $chapters),
+            'breadcrumbs' => [['label' => 'Trang chủ', 'url' => route('home')], ['label' => 'Danh bạ doanh nghiệp']],
         ]);
+    }
+
+    private function activeFilters(array $filters, Collection $industries, Collection $chapters): array
+    {
+        $labels = [
+            'q' => isset($filters['q']) ? 'Từ khóa: '.$filters['q'] : null,
+            'industry' => isset($filters['industry']) ? $industries->firstWhere('slug', $filters['industry'])?->name ?? 'Khối ngành nghề đã chọn' : null,
+            'size' => BusinessPresentation::SIZES[$filters['size'] ?? ''] ?? null,
+            'chapter' => isset($filters['chapter']) ? $chapters->firstWhere('slug', $filters['chapter'])?->name ?? 'Chi hội đã chọn' : null,
+        ];
+
+        return collect($filters)->map(fn ($value, $key) => [
+            'label' => $labels[$key],
+            'url' => route('directory.index', array_diff_key($filters, [$key => true])),
+        ])->values()->all();
     }
 
     /** @param array<string, mixed> $filters */
@@ -92,13 +105,19 @@ class BusinessDirectoryController extends Controller
         $paginator = $query
             ->orderBy('businesses.name')
             ->paginate(12)
-            ->withQueryString();
+            ->appends($filters);
 
         $paginator->getCollection()->transform(function (object $business): object {
             $business->logo_url = filled($business->logo_media_id) && filled($business->logo_file_name)
                 ? Storage::disk(filled($business->logo_disk) ? (string) $business->logo_disk : 'public_media')
                     ->url($business->logo_media_id.'/'.$business->logo_file_name)
                 : null;
+            $business->industry_labels = filled($business->industry_names) ? explode(' · ', $business->industry_names) : [];
+            $business->location_label = BusinessPresentation::location($business->district, $business->province);
+            $business->size_label = BusinessPresentation::SIZES[$business->business_size] ?? null;
+            $business->phone_url = BusinessPresentation::phoneUrl($business->phone);
+            $business->email_url = BusinessPresentation::emailUrl($business->email);
+            $business->website_url = BusinessPresentation::websiteUrl($business->website);
 
             return $business;
         });

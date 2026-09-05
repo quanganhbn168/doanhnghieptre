@@ -235,11 +235,31 @@ class BusinessMembershipWorkflowTest extends TestCase
         Filament::setCurrentPanel(Filament::getPanel('association'));
         $this->actingAs($association, 'admin');
         Livewire::test(ViewMembership::class, ['record' => $business->id])
-            ->callAction('approve_association', ['business_chapter_id' => $business->business_chapter_id])->assertHasNoActionErrors();
+            ->callAction('approve_association', ['business_chapter_id' => $business->business_chapter_id])->assertHasNoActionErrors()
+            ->assertSet('record.status', 'chapter_pending')->assertActionHidden('approve_association')
+            ->assertSee('Hội đã duyệt hồ sơ. Chi hội được phân công kiểm tra và xác nhận tiếp nhận doanh nghiệp.');
         $this->assertSame('chapter_pending', $business->fresh()->status);
         $this->actingAs($chapterUser, 'admin');
-        Livewire::test(ViewMembership::class, ['record' => $business->id])->callAction('receive_chapter')->assertHasNoActionErrors();
+        Livewire::test(ViewMembership::class, ['record' => $business->id])->callAction('receive_chapter')->assertHasNoActionErrors()
+            ->assertSet('record.status', 'approved')->assertActionHidden('receive_chapter')->assertActionHidden('request_changes')
+            ->assertSee('Doanh nghiệp đã được kết nạp và có mặt trong danh bạ hội viên.');
         $this->assertSame('approved', $business->fresh()->status);
+    }
+
+    public function test_panel_explains_missing_documents_and_refreshes_requested_changes_immediately(): void
+    {
+        [$business, $association] = $this->workflow();
+        $business->clearMediaCollection('signed_membership_application');
+        Filament::setCurrentPanel(Filament::getPanel('association'));
+        $this->actingAs($association, 'admin');
+
+        Livewire::test(ViewMembership::class, ['record' => $business->id])
+            ->assertActionDisabled('approve_association')->assertActionHidden('download_application')
+            ->assertSee('Hồ sơ đang thiếu đơn đã ký, đóng dấu.')
+            ->callAction('request_changes', ['reason' => 'Bổ sung đơn đã ký và đóng dấu.'])->assertHasNoActionErrors()
+            ->assertSet('record.status', 'rejected')->assertActionHidden('approve_association')->assertActionHidden('request_changes')
+            ->assertSee('Nội dung cần bổ sung')->assertSee('Bổ sung đơn đã ký và đóng dấu.');
+        $this->assertSame('rejected', $business->fresh()->status);
     }
 
     public function test_staff_form_assigns_scoped_roles_and_preserves_password_on_edit(): void

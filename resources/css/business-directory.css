@@ -1,0 +1,54 @@
+.dnt-member-directory__heading { display: flex; align-items: center; justify-content: space-between; gap: 1.5rem; }
+.dnt-member-directory__heading p { margin: .625rem 0 0; color: var(--dnt-muted); font-size: 1rem; line-height: 1.7; }
+.dnt-member-directory__heading > a { flex-shrink: 0; }
+.dnt-member-directory__filter { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 1.25rem .75rem; margin-bottom: 1.5rem; padding: 1.5rem; background: #faf8f8; border: 1px solid var(--dnt-line); border-radius: .5rem; }
+.dnt-member-directory__search { display: flex; grid-column: 1; grid-row: 1; align-items: stretch; }
+.dnt-member-directory__search > div { position: relative; flex: 1; min-width: 0; }
+.dnt-member-directory__search i { position: absolute; top: 50%; left: 1rem; color: var(--dnt-muted); transform: translateY(-50%); pointer-events: none; }
+.dnt-member-directory__filter > .dnt-button { grid-column: 2; grid-row: 1; min-height: 3rem; font-size: .9375rem; }
+.dnt-member-directory__filter :is(input, select) { width: 100%; height: 3rem; padding: 0 .875rem; color: var(--dnt-ink); background: #fff; border: 1px solid var(--dnt-line); border-radius: .375rem; font-size: 1rem; font-weight: 400; }
+.dnt-member-directory__search input { padding-left: 2.75rem; }
+.dnt-member-directory__filter :is(input, select):focus-visible { outline-offset: 2px; }
+.dnt-member-directory__filter-options { display: grid; grid-column: 1 / -1; grid-row: 2; grid-template-columns: minmax(0, 1.3fr) minmax(0, 1.2fr) minmax(0, .8fr); gap: 1rem; }
+.dnt-member-directory__filter-options label { display: grid; min-width: 0; gap: .5rem; font-size: .875rem; font-weight: 500; }
+.dnt-member-directory__active-filters { display: flex; align-items: center; flex-wrap: wrap; gap: .5rem; margin-bottom: 1.5rem; }
+.dnt-member-directory__active-filters a { display: inline-flex; align-items: center; gap: .625rem; max-width: 100%; min-height: 2rem; padding: .375rem .625rem; background: #faf8f8; border: 1px solid var(--dnt-line); border-radius: .375rem; font-size: .8125rem; line-height: 1.5; }
+.dnt-member-directory__active-filters span { overflow-wrap: anywhere; }
+.dnt-member-directory__active-filters i { flex-shrink: 0; color: var(--dnt-muted); }
+.dnt-member-directory__active-filters .dnt-member-directory__clear { border-color: transparent; background: transparent; color: var(--dnt-brand-red); }
+.dnt-member-directory__results-heading { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: .5rem 1.5rem; margin-bottom: 1.25rem; }
+.dnt-member-directory__results-heading h2 { display: flex; align-items: center; gap: .625rem; margin: 0; font-family: var(--font-display); font-size: 1.125rem; font-weight: 700; line-height: 1.5; }
+.dnt-member-directory__results-heading h2 span { padding: .125rem .5rem; color: var(--dnt-brand-red); background: rgb(var(--dnt-brand-red-rgb) / .07); border-radius: .25rem; font-family: var(--font-body); font-size: .875rem; font-variant-numeric: tabular-nums; }
+.dnt-member-directory__results-heading p { margin: 0; color: var(--dnt-muted); font-size: .875rem; line-height: 1.5; }
+.dnt-member-directory__grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1.25rem; }
+.dnt-member-card { display: flex; flex-direction: column; min-width: 0; padding: 1.5rem; border: 1px solid var(--dnt-line); border-radius: .5rem; background: #fff; }
+.dnt-member-card__heading { display: flex; align-items: center; gap: 1rem; margin-bottom: 1rem; }
+.dnt-member-card__heading > div:last-child { min-width: 0; }
+.dnt-member-card__logo { display: grid; flex: 0 0 4.5rem; width: 4.5rem; height: 4.5rem; place-items: center; padding: .5rem; border: 1px solid var(--dnt-line); border-radius: .5rem; background: #faf8f8; color: var(--dnt-muted); font-size: 1.5rem; }
+.dnt-member-card__logo img { width: 100%; height: 100%; object-fit: contain; }
+.dnt-member-card h3 { margin: 0; color: var(--dnt-ink); font-family: var(--font-display); font-size: 1rem; font-weight: 700; line-height: 1.6; overflow-wrap: anywhere; }
+.dnt-member-card__heading p { margin: .375rem 0 0; color: var(--dnt-muted); font-size: .8125rem; line-height: 1.5; }
+.dnt-member-card__summary { margin: 0 0 1.25rem; color: var(--dnt-muted); font-size: .9375rem; line-height: 1.7; overflow-wrap: anywhere; }
+.dnt-member-card__details { display: grid; gap: .625rem; margin: auto 0 0; padding-block: 1rem; border-top: 1px solid var(--dnt-line); font-size: .875rem; line-height: 1.6; }
+.dnt-member-card__details > div { display: grid; grid-template-columns: 7rem minmax(0, 1fr); gap: .75rem; }
+.dnt-member-card__details dt { color: var(--dnt-muted); }
+.dnt-member-card__details dd { margin: 0; color: var(--dnt-ink); overflow-wrap: anywhere; }
+.dnt-member-card__industries dd { display: grid; gap: .375rem; }
+.dnt-member-card__details .dnt-member-card__muted { color: var(--dnt-muted); }
+.dnt-member-card__contact { display: flex; align-items: center; flex-wrap: wrap; gap: .625rem 1.25rem; padding-top: 1rem; border-top: 1px solid var(--dnt-line); font-size: .875rem; line-height: 1.5; }
+.dnt-member-card__contact a { display: inline-flex; align-items: center; gap: .5rem; min-height: 2rem; font-weight: 500; }
+.dnt-member-card__contact a:first-child { color: var(--dnt-brand-red); }
+.dnt-member-card__contact a:hover { text-decoration: underline; }
+.dnt-member-card__contact > span { color: var(--dnt-muted); }
+.dnt-member-directory .dnt-publication-empty h3 { margin: .75rem 0; font-size: 1.125rem; font-weight: 700; }
+
+@media (max-width: 767px) {
+    .dnt-member-directory__heading { align-items: flex-start; flex-direction: column; gap: 1rem; }
+    .dnt-member-directory__filter { grid-template-columns: minmax(0, 1fr); padding: 1rem; }
+    .dnt-member-directory__filter > .dnt-button { grid-column: 1; grid-row: 3; }
+    .dnt-member-directory__filter-options, .dnt-member-directory__grid { grid-template-columns: minmax(0, 1fr); }
+    .dnt-member-card { padding: 1.125rem; }
+    .dnt-member-card__heading { align-items: flex-start; gap: .75rem; }
+    .dnt-member-card__logo { flex-basis: 3.5rem; width: 3.5rem; height: 3.5rem; }
+    .dnt-member-card__details > div { grid-template-columns: 6.25rem minmax(0, 1fr); gap: .5rem; }
+}

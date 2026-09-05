@@ -4,81 +4,112 @@
 @section('meta_description', 'Tra cứu doanh nghiệp hội viên theo khối ngành nghề, quy mô và chi hội tại DNT Bắc Ninh.')
 
 @section('content')
-<section class="dnt-directory-hero">
+<div class="dnt-publication dnt-member-directory">
     <div class="container mx-auto px-4 sm:px-6 lg:px-8">
-        <h1>Danh bạ doanh nghiệp</h1>
-        <p>Tra cứu doanh nghiệp hội viên theo khối ngành nghề, quy mô và chi hội để kết nối đúng nhu cầu.</p>
-    </div>
-</section>
+        <x-frontend.breadcrumb :items="$breadcrumbs" :contained="false" />
+        <header class="dnt-publication-heading dnt-member-directory__heading">
+            <div>
+                <h1>Danh bạ doanh nghiệp</h1>
+                <p>Tìm hiểu doanh nghiệp hội viên và kết nối theo lĩnh vực, quy mô, Chi hội.</p>
+            </div>
+            <a class="dnt-publication-link" href="{{ route('membership.create') }}">Đăng ký hội viên <i class="fa-solid fa-arrow-right" aria-hidden="true"></i></a>
+        </header>
 
-<section class="dnt-section dnt-section--soft dnt-directory-section">
-    <div class="container mx-auto px-4 sm:px-6 lg:px-8">
-        <form class="dnt-directory-filter" method="GET" action="{{ route('directory.index') }}">
-            <label class="dnt-directory-filter__search">Từ khóa
-                <span><i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i><input name="q" type="search" value="{{ $filters['q'] ?? '' }}" placeholder="Tên doanh nghiệp hoặc ngành nghề"></span>
-            </label>
-            <label>Khối ngành nghề
-                <select name="industry">
-                    <option value="">Tất cả khối ngành nghề</option>
-                    @foreach($industries as $industry)
-                        <option value="{{ $industry->slug }}" @selected(($filters['industry'] ?? '') === $industry->slug)>{{ $industry->name }}</option>
-                    @endforeach
-                </select>
-            </label>
-            <label>Quy mô
-                <select name="size">
-                    <option value="">Tất cả quy mô</option>
-                    @foreach($sizeOptions as $value => $label)
-                        <option value="{{ $value }}" @selected(($filters['size'] ?? '') === $value)>{{ $label }}</option>
-                    @endforeach
-                </select>
-            </label>
-            <label>Thuộc chi hội
-                <select name="chapter">
-                    <option value="">Tất cả chi hội</option>
-                    @foreach($chapters as $chapter)
-                        <option value="{{ $chapter->slug }}" @selected(($filters['chapter'] ?? '') === $chapter->slug)>{{ $chapter->name }}</option>
-                    @endforeach
-                </select>
-            </label>
-            <div class="dnt-directory-filter__actions"><button type="submit">Lọc doanh nghiệp</button><a href="{{ route('directory.index') }}">Xóa lọc</a></div>
+        <form class="dnt-member-directory__filter" method="GET" action="{{ route('directory.index') }}" role="search" aria-label="Tra cứu doanh nghiệp">
+            <div class="dnt-member-directory__search">
+                <label for="directory-search" class="sr-only">Tên doanh nghiệp hoặc ngành nghề</label>
+                <div><i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i><input id="directory-search" name="q" type="search" value="{{ $filters['q'] ?? '' }}" placeholder="Tên doanh nghiệp, ngành nghề…" maxlength="100"></div>
+            </div>
+            <div class="dnt-member-directory__filter-options">
+                <label for="directory-industry">Khối ngành nghề
+                    <select id="directory-industry" name="industry">
+                        <option value="">Tất cả khối ngành nghề</option>
+                        @foreach($industries as $industry)
+                            <option value="{{ $industry->slug }}" @selected(($filters['industry'] ?? '') === $industry->slug)>{{ $industry->name }}</option>
+                        @endforeach
+                    </select>
+                </label>
+                <label for="directory-chapter">Chi hội
+                    <select id="directory-chapter" name="chapter">
+                        <option value="">Tất cả Chi hội</option>
+                        @foreach($chapters as $chapter)
+                            <option value="{{ $chapter->slug }}" @selected(($filters['chapter'] ?? '') === $chapter->slug)>{{ $chapter->name }}</option>
+                        @endforeach
+                    </select>
+                </label>
+                <label for="directory-size">Quy mô doanh nghiệp
+                    <select id="directory-size" name="size">
+                        <option value="">Tất cả quy mô</option>
+                        @foreach($sizeOptions as $value => $label)
+                            <option value="{{ $value }}" @selected(($filters['size'] ?? '') === $value)>{{ $label }}</option>
+                        @endforeach
+                    </select>
+                </label>
+            </div>
+            <button class="dnt-button dnt-button--dark" type="submit">Tìm doanh nghiệp</button>
         </form>
 
-        <div class="dnt-directory-result-heading"><h2>Doanh nghiệp đã xác thực</h2><span>{{ number_format($businesses->total()) }} doanh nghiệp</span></div>
-
-        @if($businesses->isNotEmpty())
-            <div class="dnt-business-directory-grid">
-                @foreach($businesses as $business)
-                    <article class="dnt-business-directory-card">
-                        <div class="dnt-business-directory-card__logo">
-                            @if($business->logo_url)
-                                <img src="{{ $business->logo_url }}" alt="Logo {{ $business->name }}" loading="lazy" width="160" height="96">
-                            @else
-                                <span>Chưa có logo</span>
-                            @endif
-                        </div>
-                        <div class="dnt-business-directory-card__body">
-                            <span class="dnt-business-directory-card__category">{{ $business->category_name ?: 'Doanh nghiệp hội viên' }}</span>
-                            <h2>{{ $business->name }}</h2>
-                            <p>{{ $business->summary ?: 'Thông tin doanh nghiệp đang được cập nhật.' }}</p>
-                        </div>
-                        <dl>
-                            <div><dt>Lĩnh vực</dt><dd>{{ $business->industry_names ?: 'Đang cập nhật' }}</dd></div>
-                            <div><dt>Quy mô</dt><dd>{{ $sizeOptions[$business->business_size] ?? 'Đang cập nhật' }}</dd></div>
-                            <div><dt>Chi hội</dt><dd>{{ $business->chapter_name ?: 'Đang cập nhật' }}</dd></div>
-                            <div><dt>Khu vực</dt><dd>{{ collect([$business->district, $business->province])->filter()->join(' · ') ?: 'Bắc Ninh' }}</dd></div>
-                        </dl>
-                        <div class="dnt-business-directory-card__contact">
-                            @if($business->phone)<a href="tel:{{ preg_replace('/[^0-9+]/', '', $business->phone) }}"><i class="fa-solid fa-phone" aria-hidden="true"></i> Liên hệ</a>@endif
-                            @if($business->website)<a href="{{ str_starts_with($business->website, 'http://') || str_starts_with($business->website, 'https://') ? $business->website : 'https://'.$business->website }}" target="_blank" rel="noopener"><i class="fa-solid fa-arrow-up-right-from-square" aria-hidden="true"></i> Website</a>@endif
-                        </div>
-                    </article>
+        @if($activeFilters)
+            <nav class="dnt-member-directory__active-filters" aria-label="Bộ lọc đang áp dụng">
+                @foreach($activeFilters as $filter)
+                    <a href="{{ $filter['url'] }}" aria-label="Bỏ lọc {{ $filter['label'] }}"><span>{{ $filter['label'] }}</span><i class="fa-solid fa-xmark" aria-hidden="true"></i></a>
                 @endforeach
-            </div>
-            <div class="dnt-directory-pagination">{{ $businesses->links() }}</div>
-        @else
-            <div class="dnt-empty-card"><i class="fa-solid fa-building-circle-check" aria-hidden="true"></i><div><h2>Chưa tìm thấy doanh nghiệp phù hợp</h2><p>Hãy đổi điều kiện lọc hoặc bỏ lọc để xem toàn bộ danh bạ.</p></div></div>
+                <a class="dnt-member-directory__clear" href="{{ route('directory.index') }}">Xóa tất cả bộ lọc</a>
+            </nav>
         @endif
+
+        <section aria-labelledby="directory-results-heading">
+            <div class="dnt-member-directory__results-heading">
+                <h2 id="directory-results-heading">{{ $activeFilters ? 'Kết quả tìm kiếm' : 'Doanh nghiệp hội viên' }} <span>{{ number_format($businesses->total()) }}</span></h2>
+                @if($businesses->isNotEmpty())<p>Hiển thị {{ $businesses->firstItem() }}–{{ $businesses->lastItem() }} trong {{ number_format($businesses->total()) }} doanh nghiệp</p>@endif
+            </div>
+
+            @if($businesses->isNotEmpty())
+                <div class="dnt-member-directory__grid">
+                    @foreach($businesses as $business)
+                        <article class="dnt-member-card">
+                            <header class="dnt-member-card__heading">
+                                <div class="dnt-member-card__logo" aria-hidden="true">
+                                    @if($business->logo_url)<img src="{{ $business->logo_url }}" alt="" loading="lazy" width="72" height="72">
+                                    @else<i class="fa-regular fa-building" aria-hidden="true"></i>@endif
+                                </div>
+                                <div>
+                                    <h3>{{ $business->name }}</h3>
+                                    @if($business->category_name)<p>{{ $business->category_name }}</p>@endif
+                                </div>
+                            </header>
+                            @if($business->summary)<p class="dnt-member-card__summary">{{ $business->summary }}</p>@endif
+                            <dl class="dnt-member-card__details">
+                                <div class="dnt-member-card__industries">
+                                    <dt>Khối ngành nghề</dt>
+                                    <dd>
+                                        @forelse($business->industry_labels as $industryName)<span>{{ $industryName }}</span>
+                                        @empty<span class="dnt-member-card__muted">Đang cập nhật</span>@endforelse
+                                    </dd>
+                                </div>
+                                @if($business->chapter_name)<div><dt>Chi hội</dt><dd>{{ $business->chapter_name }}</dd></div>@endif
+                                @if($business->size_label)<div><dt>Quy mô</dt><dd>{{ $business->size_label }}</dd></div>@endif
+                                @if($business->location_label)<div><dt>Khu vực</dt><dd>{{ $business->location_label }}</dd></div>@endif
+                            </dl>
+                            <footer class="dnt-member-card__contact">
+                                @if($business->phone_url)<a href="{{ $business->phone_url }}" aria-label="Gọi {{ $business->name }}: {{ $business->phone }}"><i class="fa-solid fa-phone" aria-hidden="true"></i> {{ $business->phone }}</a>@endif
+                                @if($business->email_url)<a href="{{ $business->email_url }}" aria-label="Gửi email tới {{ $business->name }}"><i class="fa-regular fa-envelope" aria-hidden="true"></i> Email</a>@endif
+                                @if($business->website_url)<a href="{{ $business->website_url }}" target="_blank" rel="noopener noreferrer" aria-label="Website của {{ $business->name }} (mở tab mới)"><i class="fa-solid fa-arrow-up-right-from-square" aria-hidden="true"></i> Website</a>@endif
+                                @if(! $business->phone_url && ! $business->email_url && ! $business->website_url)<span>Thông tin liên hệ đang cập nhật.</span>@endif
+                            </footer>
+                        </article>
+                    @endforeach
+                </div>
+                <x-frontend.publication-pagination :paginator="$businesses" />
+            @else
+                <div class="dnt-publication-empty">
+                    <i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i>
+                    <h3>{{ $activeFilters ? 'Chưa tìm thấy doanh nghiệp phù hợp' : 'Danh bạ đang được cập nhật' }}</h3>
+                    <p>{{ $activeFilters ? 'Thử từ khóa ngắn hơn hoặc bỏ bớt điều kiện lọc để mở rộng kết quả.' : 'Thông tin doanh nghiệp sẽ xuất hiện sau khi hoàn tất quy trình kết nạp hội viên.' }}</p>
+                    @if($activeFilters)<a class="dnt-publication-link" href="{{ route('directory.index') }}">Xem toàn bộ danh bạ <i class="fa-solid fa-arrow-right" aria-hidden="true"></i></a>@endif
+                </div>
+            @endif
+        </section>
     </div>
-</section>
+</div>
 @endsection

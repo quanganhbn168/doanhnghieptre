@@ -44,7 +44,7 @@ class MembershipResource extends Resource
 
     public static function canViewAny(): bool
     {
-        return (bool) (auth('admin')->user()?->canReviewAssociation() || auth('admin')->user()?->canReceiveChapter());
+        return (bool) (auth('admin')->user()?->canRatifyMembership() || auth('admin')->user()?->canReviewAssociation() || auth('admin')->user()?->canReceiveChapter());
     }
 
     public static function canView($record): bool

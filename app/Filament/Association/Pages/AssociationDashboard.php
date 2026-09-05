@@ -2,6 +2,7 @@
 
 namespace App\Filament\Association\Pages;
 
+use App\Filament\Association\Widgets\ContentStats;
 use App\Filament\Association\Widgets\MembershipStats;
 use Filament\Pages\Dashboard;
 
@@ -13,6 +14,6 @@ class AssociationDashboard extends Dashboard
 
     public function getWidgets(): array
     {
-        return [MembershipStats::class];
+        return [MembershipStats::class, ContentStats::class];
     }
 }

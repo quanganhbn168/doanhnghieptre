@@ -24,7 +24,7 @@
             <div class="container mx-auto px-4 sm:px-6 lg:px-8">
                 <div class="dnt-account__metrics" aria-label="Tổng quan hồ sơ">
                     <article><span>Doanh nghiệp đã gửi</span><strong>{{ $businesses->count() }}</strong></article>
-                    <article><span>Đang chờ duyệt</span><strong>{{ $businesses->whereIn('status', ['pending', 'chapter_pending'])->count() }}</strong></article>
+                    <article><span>Đang chờ duyệt</span><strong>{{ $businesses->whereIn('status', ['pending', 'chapter_pending', 'board_pending'])->count() }}</strong></article>
                     <article><span>Hội viên chính thức</span><strong>{{ $businesses->where('status', 'approved')->count() }}</strong></article>
                 </div>
 
@@ -44,8 +44,8 @@
                         <div class="dnt-account-panel__heading"><h2>Việc cần làm</h2></div>
                         <ul class="dnt-account-checklist">
                             <li class="{{ $businesses->isNotEmpty() ? 'is-done' : '' }}"><i class="fa-solid {{ $businesses->isNotEmpty() ? 'fa-circle-check' : 'fa-circle' }}" aria-hidden="true"></i><span>Nộp hồ sơ đăng ký doanh nghiệp.</span></li>
-                            <li class="{{ $businesses->whereIn('status', ['chapter_pending', 'approved'])->isNotEmpty() ? 'is-done' : '' }}"><i class="fa-solid {{ $businesses->whereIn('status', ['chapter_pending', 'approved'])->isNotEmpty() ? 'fa-circle-check' : 'fa-circle' }}" aria-hidden="true"></i><span>Hội duyệt doanh nghiệp và xác thực thông tin.</span></li>
-                            <li class="{{ $hasApprovedBusiness ? 'is-done' : '' }}"><i class="fa-solid {{ $hasApprovedBusiness ? 'fa-circle-check' : 'fa-circle' }}" aria-hidden="true"></i><span>Chi hội tiếp nhận doanh nghiệp trở thành hội viên.</span></li>
+                            <li class="{{ $businesses->whereIn('status', ['chapter_pending', 'approved'])->isNotEmpty() ? 'is-done' : '' }}"><i class="fa-solid {{ $businesses->whereIn('status', ['chapter_pending', 'approved'])->isNotEmpty() ? 'fa-circle-check' : 'fa-circle' }}" aria-hidden="true"></i><span>Văn phòng kiểm tra, Chi hội thẩm định hồ sơ.</span></li>
+                            <li class="{{ $hasApprovedBusiness ? 'is-done' : '' }}"><i class="fa-solid {{ $hasApprovedBusiness ? 'fa-circle-check' : 'fa-circle' }}" aria-hidden="true"></i><span>Trưởng ban Hội viên chuẩn y kết nạp.</span></li>
                             <li><i class="fa-solid fa-circle" aria-hidden="true"></i><span>Tham gia sự kiện và cập nhật các cơ hội giao thương phù hợp.</span></li>
                         </ul>
                     </section>
@@ -53,7 +53,7 @@
 
                 <section class="dnt-account-panel dnt-account-businesses">
                     <div class="dnt-account-panel__heading">
-                        <div><h2>Doanh nghiệp của tôi</h2><p>Doanh nghiệp xuất hiện trên danh bạ sau khi Hội duyệt và Chi hội tiếp nhận.</p></div>
+                        <div><h2>Doanh nghiệp của tôi</h2><p>Doanh nghiệp xuất hiện trên danh bạ sau khi Trưởng ban Hội viên chuẩn y.</p></div>
                         <a class="dnt-text-link" href="{{ $hasApprovedBusiness ? url('/thanh-vien') : route('membership.create') }}">{{ $hasApprovedBusiness ? 'Mở cổng doanh nghiệp' : 'Thêm doanh nghiệp' }} <i class="fa-solid fa-arrow-right" aria-hidden="true"></i></a>
                     </div>
 
@@ -70,10 +70,14 @@
                                 <div class="dnt-account-business-card__title"><h3>{{ $business->name }}</h3><span class="dnt-status dnt-status--{{ $business->status }}">{{ $statusLabels[$business->status] ?? $business->status }}</span></div>
                                 @if($business->membership_code)<p>Mã hội viên: <strong>{{ $business->membership_code }}</strong> · {{ $business->chapter?->name }}</p>@endif
                                 <p>{{ $business->category?->name ?: 'Đang cập nhật nhóm doanh nghiệp' }} · {{ $business->industries->first()?->name ?: 'Đang cập nhật lĩnh vực' }}</p>
-                                @if($business->status === 'rejected')
+                                @if($business->status === 'changes_requested')
                                     <p class="dnt-account-business-card__notice">Hồ sơ cần được bổ sung. Anh/chị hãy chỉnh sửa rồi gửi lại để Hội duyệt.</p>
                                 @elseif($business->status === 'chapter_pending')
-                                    <p class="dnt-account-business-card__notice">Hội đã duyệt. Hồ sơ đang chờ {{ $business->chapter?->name ?: 'Chi hội' }} tiếp nhận.</p>
+                                    <p class="dnt-account-business-card__notice">Văn phòng đã kiểm tra. Hồ sơ đang chờ {{ $business->chapter?->name ?: 'Chi hội' }} thẩm định.</p>
+                                @elseif($business->status === 'board_pending')
+                                    <p class="dnt-account-business-card__notice">Chi hội đã đề xuất kết nạp, đang chờ Trưởng ban Hội viên chuẩn y.</p>
+                                @elseif($business->status === 'rejected')
+                                    <p class="dnt-account-business-card__notice">Hồ sơ đã bị từ chối kết nạp. Vui lòng xem lý do trong lịch sử xử lý.</p>
                                 @elseif($business->status === 'pending')
                                     <p class="dnt-account-business-card__notice">Hồ sơ đã gửi và đang được Hội kiểm tra.</p>
                                 @endif
@@ -82,7 +86,7 @@
                                 @endif
                             </div>
                             <div class="dnt-account-business-card__actions">
-                                @if($business->status === 'rejected' || $business->status === 'draft')
+                                @if($business->status === 'changes_requested' || $business->status === 'draft')
                                     <a class="dnt-button dnt-button--dark" href="{{ route('account.businesses.edit', $business) }}">Bổ sung hồ sơ</a>
                                 @elseif($business->status === 'approved')
                                     <a class="dnt-text-link" href="{{ route('directory.index', ['q' => $business->name]) }}">Xem trên danh bạ <i class="fa-solid fa-arrow-right" aria-hidden="true"></i></a>
@@ -91,7 +95,7 @@
                         </article>
                     @empty
                         <div class="dnt-account-empty">
-                            <h3>Chưa có hồ sơ doanh nghiệp</h3><p>Gửi đơn gia nhập Hội để Hội xét duyệt và Chi hội tiếp nhận doanh nghiệp.</p><a class="dnt-button dnt-button--dark" href="{{ route('membership.create') }}">Bắt đầu đăng ký</a>
+                            <h3>Chưa có hồ sơ doanh nghiệp</h3><p>Gửi đơn gia nhập Hội để Văn phòng kiểm tra, Chi hội thẩm định và Trưởng ban Hội viên chuẩn y.</p><a class="dnt-button dnt-button--dark" href="{{ route('membership.create') }}">Bắt đầu đăng ký</a>
                         </div>
                     @endforelse
                 </section>

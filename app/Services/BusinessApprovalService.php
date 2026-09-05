@@ -6,7 +6,9 @@ use App\Models\Business;
 use App\Models\BusinessChapter;
 use App\Models\Member;
 use App\Models\User;
+use App\Notifications\MembershipAccountInvitation;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
 
 class BusinessApprovalService
@@ -24,7 +26,8 @@ class BusinessApprovalService
                 'association_approved_at' => now(),
                 'association_approved_by' => $reviewer->id,
             ])->save();
-            $business->transitionTo('chapter_pending', $reviewer->id, 'Hội đã duyệt hồ sơ và chuyển Chi hội tiếp nhận.');
+            $business->transitionTo('chapter_pending', $reviewer->id, 'Văn phòng xác nhận hồ sơ hợp lệ và chuyển Chi hội thẩm định.');
+            app(MembershipNotificationService::class)->updated($business);
         });
     }
 
@@ -36,7 +39,46 @@ class BusinessApprovalService
             $this->requireStatus($business, ['chapter_pending']);
             $this->requireDocument($business);
             if (! $business->association_approved_at) {
-                throw ValidationException::withMessages(['status' => 'Hồ sơ chưa được Hội duyệt.']);
+                throw ValidationException::withMessages(['status' => 'Văn phòng chưa kiểm tra hồ sơ.']);
+            }
+            $business->forceFill(['chapter_reviewed_at' => now(), 'chapter_reviewed_by' => $reviewer->id])->save();
+            $business->transitionTo('board_pending', $reviewer->id, 'Chi hội đã thẩm định và đề xuất Trưởng ban Hội viên chuẩn y.');
+            app(MembershipNotificationService::class)->updated($business);
+        });
+    }
+
+    public function ratify(Business $business, User $reviewer): void
+    {
+        abort_unless($reviewer->canRatifyMembership(), 403);
+        DB::transaction(function () use ($business, $reviewer): void {
+            $business = Business::query()->lockForUpdate()->findOrFail($business->id);
+            $this->requireStatus($business, ['board_pending']);
+            $this->requireDocument($business);
+            if (! $business->association_approved_at || ! $business->chapter_reviewed_at || ! $business->chapter?->is_active) {
+                throw ValidationException::withMessages(['status' => 'Hồ sơ phải được Văn phòng kiểm tra và Chi hội đang hoạt động thẩm định trước khi chuẩn y.']);
+            }
+            $groups = $business->industries()->where('is_active', true)->where('is_member_group', true)->count();
+            if ($groups < 1 || $groups > 5 || $business->industries()->count() !== $groups) {
+                throw ValidationException::withMessages(['status' => 'Hồ sơ cần từ 1 đến 5 khối ngành nghề đang hoạt động. Vui lòng yêu cầu bổ sung.']);
+            }
+            if (! $business->submitted_by_user_id) {
+                $email = Str::lower(trim((string) $business->application_email));
+                if (! filter_var($email, FILTER_VALIDATE_EMAIL)) {
+                    throw ValidationException::withMessages(['status' => 'Hồ sơ chưa có email người đại diện hợp lệ.']);
+                }
+                $user = User::query()->where('email', $email)->lockForUpdate()->first();
+                if ($user && (! $user->hasApprovedAccount() || $user->roles()->exists() || $user->permissions()->exists())) {
+                    throw ValidationException::withMessages(['status' => 'Email người đại diện đang thuộc tài khoản không phù hợp để cấp quyền hội viên.']);
+                }
+                if (! $user) {
+                    $user = User::query()->create([
+                        'name' => $business->representative_name ?: $business->name, 'email' => $email,
+                        'phone' => $business->phone, 'password' => Str::random(64),
+                        'is_active' => true, 'approval_status' => 'approved',
+                    ]);
+                    $user->notify(new MembershipAccountInvitation);
+                }
+                $business->forceFill(['submitted_by_user_id' => $user->id])->save();
             }
             $reviewerId = $reviewer->id;
             $business->loadMissing('submittedBy');
@@ -55,7 +97,8 @@ class BusinessApprovalService
             }
 
             $business->forceFill(['membership_code' => $business->membership_code ?: 'DNTBN-DN-'.str_pad((string) $business->id, 6, '0', STR_PAD_LEFT)])->save();
-            $business->transitionTo('approved', $reviewerId, 'Chi hội đã tiếp nhận; doanh nghiệp được công nhận là hội viên chính thức.');
+            $business->transitionTo('approved', $reviewerId, 'Trưởng ban Hội viên đã chuẩn y; doanh nghiệp trở thành hội viên chính thức.');
+            app(MembershipNotificationService::class)->updated($business);
         });
     }
 
@@ -63,13 +106,37 @@ class BusinessApprovalService
     {
         DB::transaction(function () use ($business, $reviewer, $reason): void {
             $business = Business::query()->lockForUpdate()->findOrFail($business->id);
-            abort_unless($reviewer->canReviewAssociation() || ($business->status === 'chapter_pending' && $reviewer->canReceiveChapter() && $reviewer->managedChapters()->where('is_active', true)->whereKey($business->business_chapter_id)->exists()), 403);
-            $this->requireStatus($business, ['pending', 'chapter_pending']);
+            abort_unless($this->canReviewCurrentStage($business, $reviewer), 403);
+            $this->requireStatus($business, ['pending', 'chapter_pending', 'board_pending']);
             if (trim($reason) === '' || mb_strlen($reason) > 2000) {
                 throw ValidationException::withMessages(['reason' => 'Nhập lý do cần bổ sung, tối đa 2.000 ký tự.']);
             }
-            $business->transitionTo('rejected', $reviewer->id, trim($reason));
+            $business->transitionTo('changes_requested', $reviewer->id, trim($reason));
+            app(MembershipNotificationService::class)->updated($business);
         });
+    }
+
+    public function reject(Business $business, User $reviewer, string $reason): void
+    {
+        DB::transaction(function () use ($business, $reviewer, $reason): void {
+            $business = Business::query()->lockForUpdate()->findOrFail($business->id);
+            abort_unless($this->canReviewCurrentStage($business, $reviewer), 403);
+            if (trim($reason) === '' || mb_strlen($reason) > 2000) {
+                throw ValidationException::withMessages(['reason' => 'Nhập lý do từ chối, tối đa 2.000 ký tự.']);
+            }
+            $business->transitionTo('rejected', $reviewer->id, trim($reason));
+            app(MembershipNotificationService::class)->updated($business);
+        });
+    }
+
+    public function canReviewCurrentStage(Business $business, User $reviewer): bool
+    {
+        return match ($business->status) {
+            'pending' => $reviewer->canReviewAssociation(),
+            'chapter_pending' => $reviewer->canReceiveChapter() && $reviewer->managedChapters()->where('is_active', true)->whereKey($business->business_chapter_id)->exists(),
+            'board_pending' => $reviewer->canRatifyMembership(),
+            default => false,
+        };
     }
 
     private function requireStatus(Business $business, array $statuses): void

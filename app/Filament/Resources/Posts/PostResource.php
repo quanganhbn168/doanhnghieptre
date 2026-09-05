@@ -12,6 +12,7 @@ use BackedEnum;
 use Filament\Resources\Resource;
 use Filament\Schemas\Schema;
 use Filament\Tables\Table;
+use Illuminate\Database\Eloquent\Builder;
 use UnitEnum;
 
 class PostResource extends Resource
@@ -29,6 +30,11 @@ class PostResource extends Resource
     protected static string|UnitEnum|null $navigationGroup = 'Nội dung website';
 
     protected static ?int $navigationSort = 20;
+
+    public static function getEloquentQuery(): Builder
+    {
+        return parent::getEloquentQuery()->whereNull('business_id');
+    }
 
     public static function form(Schema $schema): Schema
     {

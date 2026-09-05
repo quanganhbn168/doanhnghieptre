@@ -21,6 +21,9 @@ class ListMemberships extends ListRecords
             }
             $tabs[$status] = Tab::make($label)->modifyQueryUsing(fn (Builder $query) => $query->where('status', $status));
         }
+        if (auth('admin')->user()?->canReviewAssociation()) {
+            $tabs['profile_updates'] = Tab::make('Bản cập nhật hồ sơ')->modifyQueryUsing(fn (Builder $query) => $query->where('status', 'approved')->whereNotNull('pending_profile'));
+        }
 
         return $tabs;
     }

@@ -30,7 +30,7 @@ class StaffForm
                 Select::make('managedChapters')->label('Chi hội được phân công')->relationship('managedChapters', 'name', modifyQueryUsing: fn ($query) => $query->where('is_active', true))
                     ->multiple()->searchable()->preload()->in(fn () => BusinessChapter::query()->where('is_active', true)->pluck('id')->all())
                     ->required(fn (Get $get) => in_array('chapter_manager', $get('staff_roles') ?? [], true)),
-            ])->description('Cán bộ Hội xét duyệt hồ sơ và quản lý tổ chức. Cán bộ Chi hội chỉ xử lý hồ sơ trong các Chi hội được phân công.')->columns(2)->columnSpanFull(),
+            ])->description('Văn phòng kiểm tra hồ sơ; Chi hội trưởng thẩm định trong Chi hội được phân công; Trưởng ban Hội viên chuẩn y; Ban Truyền thông duyệt nội dung.')->columns(2)->columnSpanFull(),
         ]);
     }
 }

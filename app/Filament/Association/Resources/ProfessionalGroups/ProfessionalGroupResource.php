@@ -18,6 +18,11 @@ class ProfessionalGroupResource extends \App\Filament\Resources\ProfessionalGrou
         return static::canViewAny() && ! $record->hasAssignments();
     }
 
+    public static function canViewAny(): bool
+    {
+        return (bool) auth('admin')->user()?->canManageAssociation();
+    }
+
     public static function getPages(): array
     {
         return ['index' => Pages\ListProfessionalGroups::route('/'), 'create' => Pages\CreateProfessionalGroup::route('/create'), 'edit' => Pages\EditProfessionalGroup::route('/{record}/edit')];

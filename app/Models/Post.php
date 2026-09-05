@@ -16,6 +16,8 @@ class Post extends Model implements HasMedia
 {
     use HasComments, HasSlug, HasTranslations, InteractsWithMedia, SoftDeletes;
 
+    public const REVIEW_STATUSES = ['pending' => 'Chờ duyệt', 'approved' => 'Đã duyệt', 'rejected' => 'Cần chỉnh sửa'];
+
     protected $fillable = [
         'image_id',
         'post_category_id',
@@ -51,7 +53,19 @@ class Post extends Model implements HasMedia
     public function scopeVisibleOnSite(Builder $query): Builder
     {
         return $query->where('is_active', true)
+            ->where('review_status', 'approved')
+            ->where(fn (Builder $posts) => $posts->whereNull('business_id')->orWhereHas('business', fn (Builder $businesses) => $businesses->where('status', 'approved')))
             ->where(fn (Builder $posts) => $posts->whereNull('published_at')->orWhere('published_at', '<=', now()));
+    }
+
+    public function business(): BelongsTo
+    {
+        return $this->belongsTo(Business::class);
+    }
+
+    public function scopeOwnedBy(Builder $query, User $user): Builder
+    {
+        return $query->whereHas('business', fn (Builder $businesses) => $businesses->representedBy($user));
     }
 
     public function category(): BelongsTo

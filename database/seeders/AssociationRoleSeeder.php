@@ -12,8 +12,10 @@ class AssociationRoleSeeder extends Seeder
     public function run(): void
     {
         foreach ([
-            'association_manager' => ['association.review', 'association.manage'],
+            'association_manager' => ['association.review', 'association.manage', 'content.moderate'],
             'chapter_manager' => ['chapters.receive'],
+            'membership_head' => ['memberships.ratify'],
+            'communications_manager' => ['content.moderate'],
         ] as $name => $permissions) {
             $role = Role::findOrCreate($name, 'admin');
             foreach ($permissions as $permission) {

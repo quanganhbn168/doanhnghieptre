@@ -178,3 +178,14 @@
     font-size: .75rem;
     line-height: 1.5;
 }
+.dnt-membership-code { overflow-wrap: anywhere; }
+.dnt-membership-progress { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 1rem; margin: 1.5rem 0; padding: 0; list-style: none; }
+.dnt-membership-progress li { display: grid; gap: .5rem; padding: 1rem; background: #f7f7f7; border: 1px solid #e5e5e5; border-radius: .5rem; }
+.dnt-membership-progress li > span { display: grid; place-items: center; width: 2rem; height: 2rem; border-radius: 50%; background: #e5e5e5; font-weight: 600; }
+.dnt-membership-progress .is-done { background: #f0f8f2; border-color: #a8d5b3; }
+.dnt-membership-progress .is-current { border-color: #c21f2b; }
+.dnt-membership-progress .is-current > span { color: white; background: #c21f2b; }
+.dnt-membership-history { margin: 1rem 0 0; padding-left: 1.25rem; }
+.dnt-membership-history li { padding: .75rem 0; }
+.dnt-membership-history time { display: block; color: #666; font-size: .875rem; }
+@media (max-width: 640px) { .dnt-membership-progress { grid-template-columns: 1fr; } }

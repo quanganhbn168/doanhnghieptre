@@ -4,6 +4,7 @@ namespace App\Filament\Association\Resources\Memberships\Schemas;
 
 use App\Models\Business;
 use App\Models\Industry;
+use App\Services\BusinessProfileReviewService;
 use App\Support\BusinessPresentation;
 use Filament\Infolists\Components\ImageEntry;
 use Filament\Infolists\Components\RepeatableEntry;
@@ -26,10 +27,12 @@ class MembershipInfolist
                         ->formatStateUsing(fn (string $state) => Business::STATUS_LABELS[$state] ?? $state)
                         ->color(fn (string $state) => BusinessPresentation::statusColor($state)),
                     TextEntry::make('membership_code')->label('Mã hội viên')->copyable()->copyMessage('Đã sao chép mã hội viên')->placeholder('Chưa cấp mã'),
-                    TextEntry::make('chapter.name')->label('Chi hội tiếp nhận')->placeholder('Chờ Hội phân công'),
+                    TextEntry::make('chapter.name')->label('Chi hội đăng ký')->placeholder('Chờ Hội phân công'),
                     TextEntry::make('created_at')->label('Ngày tạo hồ sơ')->dateTime('d/m/Y H:i'),
-                    TextEntry::make('association_approved_at')->label('Hội duyệt')->dateTime('d/m/Y H:i')->placeholder('Chưa duyệt'),
-                    TextEntry::make('approved_at')->label('Ngày kết nạp')->dateTime('d/m/Y')->placeholder('Chưa tiếp nhận'),
+                    TextEntry::make('association_approved_at')->label('Văn phòng kiểm tra')->dateTime('d/m/Y H:i')->placeholder('Chưa duyệt'),
+                    TextEntry::make('chapter_reviewed_at')->label('Chi hội đề xuất')->dateTime('d/m/Y H:i')->placeholder('Chưa thẩm định'),
+                    TextEntry::make('application_code')->label('Mã hồ sơ')->copyable(),
+                    TextEntry::make('approved_at')->label('Ngày kết nạp')->dateTime('d/m/Y')->placeholder('Chưa chuẩn y'),
                 ])->columns(['default' => 2, 'md' => 3])->columnSpanFull(),
             Tabs::make('Chi tiết hồ sơ')->id('membership-details')->persistTabInQueryString('tab')->tabs([
                 Tab::make('Doanh nghiệp')->icon('heroicon-o-building-office-2')->schema([
@@ -55,7 +58,7 @@ class MembershipInfolist
                     Section::make('Người đại diện')->compact()->schema([
                         TextEntry::make('representative_name')->label('Họ và tên')->state(fn (Business $record) => $record->representativeDisplayName())->placeholder('Chưa cập nhật'),
                         TextEntry::make('representative_job_title')->label('Chức danh')->placeholder('Chưa cập nhật'),
-                        TextEntry::make('submittedBy.email')->label('Email theo dõi hồ sơ')->copyable()->copyMessage('Đã sao chép email')->placeholder('Chưa có tài khoản theo dõi')->columnSpanFull(),
+                        TextEntry::make('application_email')->state(fn (Business $record) => $record->submittedBy?->email ?: $record->application_email)->label('Email theo dõi hồ sơ')->copyable()->copyMessage('Đã sao chép email')->placeholder('Chưa có email theo dõi')->columnSpanFull(),
                     ])->columns(['default' => 1, 'md' => 2]),
                     Section::make('Liên hệ doanh nghiệp')->compact()->schema([
                         TextEntry::make('phone')->label('Điện thoại')->icon('heroicon-o-phone')->placeholder('Chưa cập nhật')
@@ -67,6 +70,13 @@ class MembershipInfolist
                         TextEntry::make('location')->label('Khu vực')->state(fn (Business $record) => BusinessPresentation::location($record->district, $record->province))->placeholder('Chưa cập nhật'),
                         TextEntry::make('address')->label('Địa chỉ')->placeholder('Chưa cập nhật')->columnSpanFull(),
                     ])->columns(['default' => 1, 'md' => 2]),
+                ]),
+                Tab::make('Bản cập nhật')->icon('heroicon-o-pencil-square')->visible(fn (Business $record) => filled($record->pending_profile))->schema([
+                    TextEntry::make('profile_review_note')->label('Nội dung cần sửa')->placeholder('Đang chờ Văn phòng kiểm tra'),
+                    RepeatableEntry::make('profile_changes')->label('Đối chiếu thông tin')->state(fn (Business $record) => app(BusinessProfileReviewService::class)->changes($record))->schema([
+                        TextEntry::make('field')->label('Thông tin'), TextEntry::make('before')->label('Đã chuẩn y'), TextEntry::make('after')->label('Đề nghị thay đổi'),
+                    ])->columns(['default' => 1, 'md' => 3]),
+                    ImageEntry::make('pending_logo')->label('Logo đề nghị thay đổi')->state(fn (Business $record) => $record->getFirstMediaUrl('pending_logo'))->visible(fn (Business $record) => $record->hasMedia('pending_logo'))->imageHeight(100),
                 ]),
                 Tab::make('Lịch sử xử lý')->icon('heroicon-o-clock')
                     ->badge(fn (Business $record) => $record->statusHistories->count())->schema([
@@ -98,11 +108,11 @@ class MembershipInfolist
                         ->state(fn (Business $record) => $record->getFirstMedia('signed_membership_application')?->created_at)
                         ->visible(fn (Business $record) => $record->hasMedia('signed_membership_application')),
                 ]),
-                Section::make('Nội dung cần bổ sung')->icon('heroicon-o-chat-bubble-left-ellipsis')->schema([
+                Section::make(fn (Business $record) => $record->status === 'rejected' ? 'Lý do từ chối' : 'Nội dung cần bổ sung')->icon('heroicon-o-chat-bubble-left-ellipsis')->schema([
                     TextEntry::make('latest_feedback')->label('Yêu cầu bổ sung')->hiddenLabel()
-                        ->state(fn (Business $record) => $record->statusHistories->firstWhere('to_status', 'rejected')?->reason)
+                        ->state(fn (Business $record) => $record->statusHistories->firstWhere('to_status', $record->status)?->reason)
                         ->placeholder('Chưa có ghi chú bổ sung.'),
-                ])->visible(fn (Business $record) => $record->status === 'rejected'),
+                ])->visible(fn (Business $record) => in_array($record->status, ['changes_requested', 'rejected'], true)),
             ])->columnSpan(1),
         ]);
     }
@@ -111,11 +121,13 @@ class MembershipInfolist
     {
         return match ($record->status) {
             'pending' => $record->hasMedia('signed_membership_application')
-                ? 'Kiểm tra thông tin và đơn gia nhập trước khi duyệt, chuyển hồ sơ đến Chi hội tiếp nhận.'
+                ? 'Văn phòng kiểm tra thông tin, đơn gia nhập và chuyển hồ sơ hợp lệ đến Chi hội thẩm định.'
                 : 'Hồ sơ đang thiếu đơn đã ký, đóng dấu. Yêu cầu doanh nghiệp bổ sung trước khi duyệt.',
-            'chapter_pending' => 'Hội đã duyệt hồ sơ. Chi hội được phân công kiểm tra và xác nhận tiếp nhận doanh nghiệp.',
+            'chapter_pending' => 'Văn phòng đã kiểm tra hồ sơ. Chi hội thẩm định và đề xuất kết nạp.',
+            'board_pending' => 'Chi hội đã đề xuất kết nạp. Chờ Trưởng ban Hội viên phê duyệt chuẩn y cuối cùng.',
             'approved' => 'Doanh nghiệp đã được kết nạp và có mặt trong danh bạ hội viên.',
-            'rejected' => 'Đang chờ doanh nghiệp bổ sung. Hồ sơ sẽ quay lại bước Hội duyệt sau khi được gửi lại.',
+            'changes_requested' => 'Đang chờ doanh nghiệp bổ sung. Hồ sơ sẽ quay lại bước Văn phòng kiểm tra sau khi được gửi lại.',
+            'rejected' => 'Hồ sơ đã bị từ chối kết nạp. Chưa cấp tư cách hoặc tài khoản hội viên.',
             default => 'Doanh nghiệp chưa gửi hồ sơ. Chưa thực hiện xét duyệt ở bước này.',
         };
     }

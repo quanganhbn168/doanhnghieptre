@@ -3,11 +3,14 @@
 namespace Tests\Feature;
 
 use App\Models\Business;
+use App\Models\BusinessChapter;
 use App\Models\Industry;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\URL;
 use PHPUnit\Framework\Attributes\DataProvider;
 use Tests\TestCase;
 
@@ -18,6 +21,7 @@ class MembershipApplicationUploadTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
+        Notification::fake();
         Storage::fake('local');
         Storage::fake('public_media');
     }
@@ -26,7 +30,7 @@ class MembershipApplicationUploadTest extends TestCase
     public function test_pdf_and_word_documents_are_accepted(string $name, string $mime, int $size): void
     {
         $this->post(route('membership.store'), $this->payload(UploadedFile::fake()->create($name, $size, $mime)))
-            ->assertSessionHasNoErrors()->assertRedirect(route('account.dashboard'));
+            ->assertSessionHasNoErrors()->assertRedirect();
 
         $document = Business::query()->sole()->getFirstMedia('signed_membership_application');
         $this->assertNotNull($document);
@@ -55,7 +59,7 @@ class MembershipApplicationUploadTest extends TestCase
         $document = $business->getFirstMedia('signed_membership_application');
         $this->assertSame('don-gia-nhap-hoi-da-ky-'.$business->id.'.docx', $document->file_name);
         $this->assertSame('application/vnd.openxmlformats-officedocument.wordprocessingml.document', $document->mime_type);
-        $this->get(route('business.membership-application.download', $business))->assertDownload($document->file_name);
+        $this->get(URL::temporarySignedRoute('membership.track.document', now()->addMinute(), ['business' => $business->id]))->assertDownload($document->file_name);
     }
 
     #[DataProvider('invalidDocuments')]
@@ -103,7 +107,7 @@ class MembershipApplicationUploadTest extends TestCase
         $owner = User::factory()->create(['approval_status' => 'approved', 'is_active' => true]);
         $business = Business::query()->create([
             'name' => 'Hồ sơ đang bổ sung', 'slug' => 'upload-replacement', 'tax_code' => 'UPLOAD-001',
-            'status' => 'rejected', 'submitted_by_user_id' => $owner->id,
+            'status' => 'changes_requested', 'submitted_by_user_id' => $owner->id,
         ]);
         $original = $business->addMedia(UploadedFile::fake()->create('don-cu.pdf', 20, 'application/pdf'))
             ->toMediaCollection('signed_membership_application');
@@ -112,7 +116,7 @@ class MembershipApplicationUploadTest extends TestCase
         $this->actingAs($owner)->patch(route('account.businesses.update', $business), $payload)
             ->assertSessionHasErrors('membership_application');
 
-        $this->assertSame('rejected', $business->fresh()->status);
+        $this->assertSame('changes_requested', $business->fresh()->status);
         $this->assertSame('Hồ sơ đang bổ sung', $business->fresh()->name);
         $this->assertSame($original->id, $business->fresh()->getFirstMedia('signed_membership_application')->id);
         Storage::disk('local')->assertExists($original->getPathRelativeToRoot());
@@ -127,6 +131,7 @@ class MembershipApplicationUploadTest extends TestCase
         $industry = Industry::query()->firstOrCreate(['slug' => 'upload-test-group'], ['name' => 'Khối kiểm thử', 'is_active' => true, 'is_member_group' => true]);
 
         return [
+            'business_chapter_id' => BusinessChapter::query()->firstOrCreate(['slug' => 'upload-chapter'], ['name' => 'Chi hội kiểm thử', 'is_active' => true])->id,
             'name' => 'Doanh nghiệp kiểm thử đơn', 'tax_code' => 'UPLOAD-001', 'business_type' => 'limited', 'business_size' => 'small',
             'representative_name' => 'Đại diện kiểm thử', 'industry_ids' => [$industry->id], 'phone' => '0900000000', 'email' => 'company@example.test',
             'login_email' => 'upload@example.test', 'password' => 'membership-test-123', 'password_confirmation' => 'membership-test-123',

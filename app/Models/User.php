@@ -62,15 +62,15 @@ class User extends Authenticatable implements FilamentUser
         }
 
         if ($panel->getId() === 'association') {
-            return $this->canReviewAssociation() || $this->canReceiveChapter();
+            return $this->canReviewAssociation() || $this->canReceiveChapter() || $this->canRatifyMembership() || $this->canModerateContent();
         }
 
-        if ($this->hasRole(['association_manager', 'chapter_manager'], 'admin') && ! $this->hasRole(['super_admin', 'admin'], 'admin')) {
+        if ($this->hasRole(['association_manager', 'chapter_manager', 'membership_head', 'communications_manager'], 'admin') && ! $this->hasRole(['super_admin', 'admin'], 'admin')) {
             return false;
         }
 
         return $this->hasApprovedAccount()
-            && ($this->hasRole(['super_admin', 'admin'], 'admin') || $this->getAllPermissions()->whereNotIn('name', ['association.review', 'association.manage', 'chapters.receive'])->isNotEmpty());
+            && ($this->hasRole(['super_admin', 'admin'], 'admin') || $this->getAllPermissions()->whereNotIn('name', ['association.review', 'association.manage', 'chapters.receive', 'memberships.ratify', 'content.moderate'])->isNotEmpty());
     }
 
     protected function casts(): array
@@ -136,6 +136,16 @@ class User extends Authenticatable implements FilamentUser
     public function canReceiveChapter(): bool
     {
         return $this->hasApprovedAccount() && $this->hasPermissionToSafely('chapters.receive') && $this->managedChapters()->where('is_active', true)->exists();
+    }
+
+    public function canRatifyMembership(): bool
+    {
+        return $this->hasApprovedAccount() && ($this->hasRole(['super_admin', 'admin'], 'admin') || $this->hasPermissionToSafely('memberships.ratify'));
+    }
+
+    public function canModerateContent(): bool
+    {
+        return $this->hasApprovedAccount() && ($this->hasRole(['super_admin', 'admin'], 'admin') || $this->hasPermissionToSafely('content.moderate'));
     }
 
     private function hasPermissionToSafely(string $permission): bool

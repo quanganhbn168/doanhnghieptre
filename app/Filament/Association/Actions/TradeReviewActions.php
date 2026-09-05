@@ -15,7 +15,7 @@ class TradeReviewActions
         $actions = [];
         foreach (['approve' => ['Duyệt đăng', 'success', ['pending']], 'reject' => ['Yêu cầu bổ sung', 'danger', ['pending']], 'close' => ['Đóng tin', 'gray', ['pending', 'approved']], 'submit' => ['Gửi duyệt lại', 'gray', ['draft', 'rejected', 'closed']]] as $decision => [$label, $color, $statuses]) {
             $action = Action::make($decision)->label($label)->color($color)
-                ->visible(fn (TradePost $record) => auth('admin')->user()?->canManageAssociation() && in_array($record->status, $statuses, true))
+                ->visible(fn (TradePost $record) => auth('admin')->user()?->canModerateContent() && in_array($record->status, $statuses, true))
                 ->action(function (TradePost $record, array $data) use ($decision): void {
                     app(TradePostService::class)->moderate($record, auth('admin')->user(), $decision, $data['review_note'] ?? null);
                     $record->refresh();

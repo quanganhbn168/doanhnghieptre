@@ -115,6 +115,7 @@ class DntAssociationContentTest extends TestCase
 
         $this->actingAs($user)
             ->post(route('account.businesses.store'), [
+                'business_chapter_id' => BusinessChapter::query()->firstOrCreate(['slug' => 'content-test-chapter'], ['name' => 'Chi hội kiểm thử', 'is_active' => true])->id,
                 'name' => 'Công ty Kiểm thử',
                 'representative_name' => 'Người đại diện kiểm thử',
                 'tax_code' => 'DNT-TEST-001',
@@ -131,9 +132,10 @@ class DntAssociationContentTest extends TestCase
                 'membership_application' => UploadedFile::fake()->create('don-gia-nhap-hoi-da-ky.pdf', 256, 'application/pdf'),
                 'confirm_information' => '1',
             ])
-            ->assertRedirect(route('account.dashboard'));
+            ->assertRedirect()->assertSessionHasNoErrors();
 
         $this->assertDatabaseHas('businesses', [
+            'business_chapter_id' => BusinessChapter::query()->firstOrCreate(['slug' => 'content-test-chapter'], ['name' => 'Chi hội kiểm thử', 'is_active' => true])->id,
             'name' => 'Công ty Kiểm thử',
             'website' => 'vinhgiang.com.vn',
             'province' => 'Hà Nội',

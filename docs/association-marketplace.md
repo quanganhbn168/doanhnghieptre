@@ -10,7 +10,9 @@
 - `/hoi/su-kien`: tạo và quản lý sự kiện, xem người đăng ký, điểm danh, hủy đăng ký.
 - `/hoi/media`: thư viện ảnh cho nội dung Hội.
 
-`association_manager` dùng các chức năng này qua quyền `association.manage`. `chapter_manager` chỉ tiếp nhận hội viên của chi hội được phân công, không xem/sửa nội dung và thư viện ảnh toàn Hội. Super admin và admin có quyền quản lý Hội như trước.
+`association_manager` (Văn phòng) và `communications_manager` (Ban Truyền thông) dùng chức năng nội dung qua quyền `content.moderate`. Danh sách đăng ký sự kiện và điểm danh vẫn cần quyền tổ chức `association.manage`. `chapter_manager` chỉ thẩm định hội viên của Chi hội được phân công; `membership_head` chuẩn y kết nạp. Hai vai trò này không quản trị nội dung mặc định. Super admin và admin giữ quyền quản lý Hội.
+
+Bài viết giới thiệu sản phẩm/dịch vụ của hội viên được gửi tại `/thanh-vien/bai-viet`, kiểm duyệt tại `/hoi/bai-viet-hoi-vien`. Các bài này dùng chung bảng `posts` nhưng có doanh nghiệp sở hữu và trạng thái duyệt riêng. Xem đầy đủ quy trình ba cấp, cập nhật hồ sơ và cấp tài khoản trong [membership-workflow.md](membership-workflow.md).
 
 ## Chợ cơ bản
 
@@ -24,7 +26,7 @@ Sự kiện dùng bảng events và event_registrations đang có, không tạo 
 
 ## Cập nhật và kiểm tra
 
-Không có migration mới cho phần chợ/nội dung này. Nếu máy chủ chưa nhận phần đăng ký hội viên trước đó, chạy migrations còn thiếu và AssociationRoleSeeder theo docs/membership-workflow.md. Không chạy migrate:fresh trên dữ liệu đang dùng.
+Phần chợ tiếp tục dùng dữ liệu hiện có. Bản nâng cấp ngày 05/09/2026 có migration cho duyệt ba cấp, bài viết hội viên và bản cập nhật hồ sơ; triển khai theo `docs/membership-workflow.md`. Không chạy `migrate:fresh` trên dữ liệu đang dùng.
 
 ```sh
 php artisan migrate --force

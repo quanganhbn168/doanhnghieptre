@@ -16,10 +16,12 @@ class Business extends Model implements HasMedia
 
     public const STATUS_LABELS = [
         'draft' => 'Bản nháp',
-        'pending' => 'Chờ Hội duyệt',
-        'chapter_pending' => 'Chờ Chi hội tiếp nhận',
+        'pending' => 'Chờ Văn phòng kiểm tra',
+        'chapter_pending' => 'Chờ Chi hội thẩm định',
+        'board_pending' => 'Chờ Trưởng ban chuẩn y',
         'approved' => 'Hội viên chính thức',
-        'rejected' => 'Cần bổ sung',
+        'changes_requested' => 'Cần bổ sung',
+        'rejected' => 'Từ chối kết nạp',
     ];
 
     protected $fillable = [
@@ -57,6 +59,8 @@ class Business extends Model implements HasMedia
             'is_featured' => 'boolean',
             'approved_at' => 'datetime',
             'association_approved_at' => 'datetime',
+            'chapter_reviewed_at' => 'datetime',
+            'pending_profile' => 'array',
         ];
     }
 
@@ -102,12 +106,12 @@ class Business extends Model implements HasMedia
 
     public function scopeVisibleToReviewer(Builder $query, User $user): Builder
     {
-        if ($user->canReviewAssociation()) {
+        if ($user->canReviewAssociation() || $user->canRatifyMembership()) {
             return $query;
         }
 
         return $query->whereIn('business_chapter_id', $user->managedChapters()->where('is_active', true)->select('business_chapters.id'))
-            ->whereIn('status', ['chapter_pending', 'approved', 'rejected'])
+            ->whereIn('status', ['chapter_pending', 'board_pending', 'approved', 'changes_requested', 'rejected'])
             ->when(! $user->canReceiveChapter(), fn (Builder $query) => $query->whereRaw('1 = 0'));
     }
 
@@ -129,9 +133,11 @@ class Business extends Model implements HasMedia
             $attributes['approved_by'] = null;
         }
 
-        if (in_array($status, ['draft', 'pending', 'rejected'], true)) {
+        if (in_array($status, ['draft', 'pending', 'changes_requested', 'rejected'], true)) {
             $attributes['association_approved_at'] = null;
             $attributes['association_approved_by'] = null;
+            $attributes['chapter_reviewed_at'] = null;
+            $attributes['chapter_reviewed_by'] = null;
         }
 
         $this->forceFill($attributes)->save();
@@ -148,6 +154,7 @@ class Business extends Model implements HasMedia
     public function registerMediaCollections(): void
     {
         $this->addMediaCollection('logo')->singleFile()->useDisk('public_media');
+        $this->addMediaCollection('pending_logo')->singleFile()->useDisk('public_media');
         $this->addMediaCollection('signed_membership_application')->singleFile()->useDisk('local');
     }
 }

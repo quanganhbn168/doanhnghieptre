@@ -6,7 +6,7 @@ trait ManagesAssociationContent
 {
     public static function canViewAny(): bool
     {
-        return (bool) auth('admin')->user()?->canManageAssociation();
+        return (bool) auth('admin')->user()?->canModerateContent();
     }
 
     public static function canView($record): bool

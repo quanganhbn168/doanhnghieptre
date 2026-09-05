@@ -11,14 +11,17 @@ use App\Models\Business;
 use App\Models\BusinessChapter;
 use App\Models\Industry;
 use App\Models\User;
+use App\Notifications\MembershipAccountInvitation;
 use App\Services\BusinessApprovalService;
+use App\Services\BusinessProfileReviewService;
 use Database\Seeders\AssociationRoleSeeder;
 use Filament\Facades\Filament;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Arr;
-use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\URL;
 use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
 use Livewire\Livewire;
@@ -32,46 +35,43 @@ class BusinessMembershipWorkflowTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
+        Notification::fake();
         Storage::fake('local');
         Storage::fake('public_media');
         $this->seed(AssociationRoleSeeder::class);
     }
 
-    public function test_guest_submits_one_form_and_can_track_without_account_approval(): void
+    public function test_guest_submits_without_creating_an_account_and_tracks_a_private_application(): void
     {
         $this->get('/register')->assertRedirect('/dang-ky-hoi-vien');
-        $this->post('/register', ['email' => 'legacy@example.test'])->assertRedirect('/dang-ky-hoi-vien');
-        $this->assertDatabaseCount('users', 0);
-        $this->get(route('membership.create'))->assertOk()->assertSee('Đăng ký hội viên')->assertSee('Đơn gia nhập Hội');
+        $this->get(route('membership.create'))->assertOk()->assertDontSee('name="password"', false);
         $payload = $this->payload();
-        $this->post(route('membership.store'), $payload)->assertSessionHasNoErrors()->assertRedirect(route('account.dashboard'));
-        $user = User::query()->where('email', $payload['login_email'])->firstOrFail();
-        $business = Business::query()->where('tax_code', $payload['tax_code'])->firstOrFail();
-        $this->assertAuthenticatedAs($user);
-        $this->assertTrue($user->hasApprovedAccount());
-        $this->assertTrue(Hash::check($payload['password'], $user->password));
-        $this->assertSame($user->id, $business->submitted_by_user_id);
+        unset($payload['password'], $payload['password_confirmation']);
+        $response = $this->post(route('membership.store'), $payload)->assertSessionHasNoErrors()->assertRedirect();
+        $business = Business::query()->sole();
+        $this->assertDatabaseCount('users', 0);
+        $this->assertGuest();
+        $this->assertNull($business->submitted_by_user_id);
         $this->assertSame('pending', $business->status);
-        $this->assertNull($business->membership_code);
+        $this->assertSame($payload['login_email'], $business->application_email);
         $this->assertTrue($business->hasMedia('signed_membership_application'));
-        $this->assertFalse($user->hasApprovedBusiness());
-        $this->get(route('account.dashboard'))->assertOk()->assertSee('Chờ Hội duyệt');
-        $this->get('/thanh-vien')->assertForbidden();
-        $this->get(route('business.membership-application.download', $business))->assertOk();
+        $this->get($response->headers->get('Location'))->assertOk()->assertSee($business->application_code)->assertSee('Chờ Văn phòng kiểm tra')
+            ->assertHeader('Referrer-Policy', 'no-referrer');
+        $this->get(route('membership.track', $business))->assertForbidden();
+        $this->get(URL::temporarySignedRoute('membership.track', now()->subMinute(), ['business' => $business->id]))->assertForbidden();
+        $this->get(URL::temporarySignedRoute('membership.track.document', now()->addMinute(), ['business' => $business->id]))->assertOk();
     }
 
-    public function test_invalid_or_duplicate_application_does_not_create_an_account_or_business(): void
+    public function test_invalid_and_duplicate_applications_do_not_create_accounts_or_duplicate_businesses(): void
     {
         $payload = $this->payload();
         unset($payload['membership_application']);
         $this->post(route('membership.store'), $payload)->assertSessionHasErrors('membership_application');
+        $this->assertDatabaseCount('businesses', 0);
+        $this->post(route('membership.store'), $this->payload())->assertSessionHasNoErrors();
+        $this->post(route('membership.store'), $this->payload())->assertSessionHasErrors('tax_code');
         $this->assertDatabaseCount('users', 0);
-        $this->assertDatabaseCount('businesses', 0);
-        $existing = User::factory()->create(['email' => $payload['login_email']]);
-        $this->post(route('membership.store'), $this->payload())->assertSessionHasErrors('login_email');
-        $this->assertDatabaseCount('users', 1);
-        $this->assertSame($existing->name, $existing->fresh()->name);
-        $this->assertDatabaseCount('businesses', 0);
+        $this->assertDatabaseCount('businesses', 1);
     }
 
     public function test_multiple_groups_keep_the_primary_group_when_reopening_and_correcting_an_application(): void
@@ -86,20 +86,20 @@ class BusinessMembershipWorkflowTest extends TestCase
         $this->assertCount(2, $business->industries);
         $this->assertSame($primary->id, $business->industries->firstWhere('pivot.is_primary', true)->id);
 
-        $business->update(['status' => 'rejected']);
-        $editUrl = route('account.businesses.edit', $business);
+        $business->update(['status' => 'changes_requested']);
+        $editUrl = URL::temporarySignedRoute('membership.track.edit', now()->addDay(), ['business' => $business->id]);
         $this->get($editUrl)->assertOk()->assertViewHas('selectedIndustryIds', $selected);
 
         // A failed correction must retain the new selection order, not the stored primary.
         $payload['industry_ids'] = array_reverse($payload['industry_ids']);
         $payload['name'] = '';
         unset($payload['membership_application']);
-        $this->from($editUrl)->patch(route('account.businesses.update', $business), $payload)
+        $this->from($editUrl)->patch(URL::temporarySignedRoute('membership.track.update', now()->addDay(), ['business' => $business->id]), $payload)
             ->assertSessionHasErrors('name')->assertRedirect($editUrl);
         $this->get($editUrl)->assertOk()->assertViewHas('selectedIndustryIds', array_reverse($selected));
 
         $payload['name'] = $business->name;
-        $this->patch(route('account.businesses.update', $business), $payload)->assertSessionHasNoErrors();
+        $this->patch(URL::temporarySignedRoute('membership.track.update', now()->addDay(), ['business' => $business->id]), $payload)->assertSessionHasNoErrors();
         $this->assertSame($payload['industry_ids'][0], $business->fresh()->industries->firstWhere('pivot.is_primary', true)->id);
     }
 
@@ -129,30 +129,33 @@ class BusinessMembershipWorkflowTest extends TestCase
         $this->assertSame($payload['industry_ids'][0], $business->industries->firstWhere('pivot.is_primary', true)->id);
     }
 
-    public function test_business_is_only_a_member_after_association_approval_and_assigned_chapter_receipt(): void
+    public function test_only_final_ratification_publishes_membership_and_provisions_the_account_once(): void
     {
-        [$business, $association, $chapterUser] = $this->workflow();
+        $this->post(route('membership.store'), $this->payload())->assertSessionHasNoErrors();
+        $business = Business::query()->sole();
+        $office = $this->staff('association_manager');
+        $chapter = $this->staff('chapter_manager');
+        $chapter->managedChapters()->attach($business->business_chapter_id);
+        $head = $this->staff('membership_head');
         $service = app(BusinessApprovalService::class);
-        $service->approveForChapter($business, $association, $business->business_chapter_id);
-        $business->refresh();
-        $this->assertSame('chapter_pending', $business->status);
-        $this->assertNotNull($business->association_approved_at);
-        $this->assertNull($business->approved_at);
-        $this->assertNull($business->membership_code);
-        $this->assertFalse($business->submittedBy->hasApprovedBusiness());
+        $service->approveForChapter($business, $office, $business->business_chapter_id);
+        $service->receive($business, $chapter);
+        $this->assertSame('board_pending', $business->fresh()->status);
+        $this->assertNull($business->fresh()->submitted_by_user_id);
+        $this->assertNull($business->fresh()->membership_code);
         $this->get(route('directory.index'))->assertDontSee($business->name);
-        $service->receive($business, $chapterUser);
+        $service->ratify($business, $head);
         $business->refresh();
         $this->assertSame('approved', $business->status);
-        $this->assertSame($association->id, $business->association_approved_by);
-        $this->assertSame($chapterUser->id, $business->approved_by);
-        $this->assertSame('DNTBN-DN-'.str_pad((string) $business->id, 6, '0', STR_PAD_LEFT), $business->membership_code);
+        $this->assertSame($head->id, $business->approved_by);
+        $this->assertSame($chapter->id, $business->chapter_reviewed_by);
         $this->assertTrue($business->submittedBy->hasApprovedBusiness());
-        $this->assertCount(2, $business->statusHistories);
-        $this->actingAs($business->submittedBy)->get('/thanh-vien')->assertOk();
-        $this->get(route('directory.index', ['q' => $business->name]))->assertSee($business->name);
+        Notification::assertSentTo($business->submittedBy, MembershipAccountInvitation::class);
+        Notification::assertSentToTimes($business->submittedBy, MembershipAccountInvitation::class, 1);
+        $this->get(route('directory.index'))->assertSee($business->name);
+        $this->assertCount(4, $business->statusHistories);
         $this->expectException(ValidationException::class);
-        $service->receive($business, $chapterUser);
+        $service->ratify($business, $head);
     }
 
     public function test_chapter_cannot_approve_for_association_or_receive_another_chapters_business(): void
@@ -192,14 +195,14 @@ class BusinessMembershipWorkflowTest extends TestCase
         $service->approveForChapter($business, $association, $business->business_chapter_id);
         $service->requestChanges($business, $chapterUser, 'Bổ sung địa chỉ trong đơn.');
         $business->refresh();
-        $this->assertSame('rejected', $business->status);
+        $this->assertSame('changes_requested', $business->status);
         $this->assertNull($business->association_approved_at);
         $payload = $this->payload();
         $payload['tax_code'] = $business->tax_code;
         $payload['business_chapter_id'] = $business->business_chapter_id;
         unset($payload['membership_application']);
         $this->actingAs($business->submittedBy)->get(route('account.dashboard'))->assertSee('Bổ sung địa chỉ trong đơn.');
-        $this->patch(route('account.businesses.update', $business), $payload)->assertSessionHasNoErrors()->assertRedirect(route('account.dashboard'));
+        $this->patch(URL::temporarySignedRoute('membership.track.update', now()->addDay(), ['business' => $business->id]), $payload)->assertSessionHasNoErrors()->assertRedirect();
         $this->assertSame('pending', $business->fresh()->status);
         $this->expectException(ValidationException::class);
         $service->receive($business, $chapterUser);
@@ -212,7 +215,7 @@ class BusinessMembershipWorkflowTest extends TestCase
         $foreign = Business::query()->create(['name' => 'Doanh nghiệp chi hội khác', 'slug' => 'foreign', 'status' => 'chapter_pending', 'business_chapter_id' => $this->chapter()->id]);
         $this->actingAs($chapterUser, 'admin')->get('/hoi')->assertOk();
         $this->get('/hoi/hoi-vien')->assertOk()->assertSee($business->name)->assertDontSee($foreign->name);
-        $this->get('/hoi/hoi-vien/'.$business->id)->assertOk()->assertSee('Chi hội tiếp nhận');
+        $this->get('/hoi/hoi-vien/'.$business->id)->assertOk()->assertSee('Chi hội đăng ký');
         $this->get('/hoi/hoi-vien/'.$foreign->id)->assertNotFound();
         $this->get(route('business.membership-application.download', $business))->assertOk();
         $this->get(route('business.membership-application.download', $foreign))->assertForbidden();
@@ -229,21 +232,21 @@ class BusinessMembershipWorkflowTest extends TestCase
         $this->get('/hoi/can-bo/create')->assertOk();
     }
 
-    public function test_filament_actions_complete_the_two_stage_workflow(): void
+    public function test_filament_actions_follow_three_roles_and_refresh_each_stage_immediately(): void
     {
-        [$business, $association, $chapterUser] = $this->workflow();
+        [$business, $office, $chapter] = $this->workflow();
+        $head = $this->staff('membership_head');
         Filament::setCurrentPanel(Filament::getPanel('association'));
-        $this->actingAs($association, 'admin');
+        $this->actingAs($office, 'admin');
         Livewire::test(ViewMembership::class, ['record' => $business->id])
             ->callAction('approve_association', ['business_chapter_id' => $business->business_chapter_id])->assertHasNoActionErrors()
-            ->assertSet('record.status', 'chapter_pending')->assertActionHidden('approve_association')
-            ->assertSee('Hội đã duyệt hồ sơ. Chi hội được phân công kiểm tra và xác nhận tiếp nhận doanh nghiệp.');
-        $this->assertSame('chapter_pending', $business->fresh()->status);
-        $this->actingAs($chapterUser, 'admin');
+            ->assertSet('record.status', 'chapter_pending')->assertActionHidden('approve_association')->assertActionHidden('ratify_membership');
+        $this->actingAs($chapter, 'admin');
         Livewire::test(ViewMembership::class, ['record' => $business->id])->callAction('receive_chapter')->assertHasNoActionErrors()
-            ->assertSet('record.status', 'approved')->assertActionHidden('receive_chapter')->assertActionHidden('request_changes')
-            ->assertSee('Doanh nghiệp đã được kết nạp và có mặt trong danh bạ hội viên.');
-        $this->assertSame('approved', $business->fresh()->status);
+            ->assertSet('record.status', 'board_pending')->assertActionHidden('receive_chapter')->assertActionHidden('ratify_membership');
+        $this->actingAs($head, 'admin');
+        Livewire::test(ViewMembership::class, ['record' => $business->id])->assertActionVisible('ratify_membership')
+            ->callAction('ratify_membership')->assertHasNoActionErrors()->assertSet('record.status', 'approved')->assertActionHidden('ratify_membership');
     }
 
     public function test_panel_explains_missing_documents_and_refreshes_requested_changes_immediately(): void
@@ -257,9 +260,9 @@ class BusinessMembershipWorkflowTest extends TestCase
             ->assertActionDisabled('approve_association')->assertActionHidden('download_application')
             ->assertSee('Hồ sơ đang thiếu đơn đã ký, đóng dấu.')
             ->callAction('request_changes', ['reason' => 'Bổ sung đơn đã ký và đóng dấu.'])->assertHasNoActionErrors()
-            ->assertSet('record.status', 'rejected')->assertActionHidden('approve_association')->assertActionHidden('request_changes')
+            ->assertSet('record.status', 'changes_requested')->assertActionHidden('approve_association')->assertActionHidden('request_changes')
             ->assertSee('Nội dung cần bổ sung')->assertSee('Bổ sung đơn đã ký và đóng dấu.');
-        $this->assertSame('rejected', $business->fresh()->status);
+        $this->assertSame('changes_requested', $business->fresh()->status);
     }
 
     public function test_staff_form_assigns_scoped_roles_and_preserves_password_on_edit(): void
@@ -309,17 +312,17 @@ class BusinessMembershipWorkflowTest extends TestCase
         $this->assertFalse($staff->fresh()->hasApprovedAccount());
     }
 
-    public function test_guest_cannot_inject_membership_status_or_staff_permissions(): void
+    public function test_guest_cannot_inject_membership_status_account_or_staff_permissions(): void
     {
         $this->post(route('membership.store'), [
             ...$this->payload(), 'status' => 'approved', 'membership_code' => 'INJECTED',
-            'roles' => ['association_manager'], 'approval_status' => 'approved', 'submitted_by_user_id' => 9999,
+            'roles' => ['membership_head'], 'approval_status' => 'approved', 'submitted_by_user_id' => 9999,
         ])->assertSessionHasNoErrors();
-        $business = Business::query()->firstOrFail();
+        $business = Business::query()->sole();
         $this->assertSame('pending', $business->status);
         $this->assertNull($business->membership_code);
-        $this->assertFalse($business->submittedBy->canReviewAssociation());
-        $this->assertFalse($business->submittedBy->canAccessPanel(Filament::getPanel('admin')));
+        $this->assertNull($business->submitted_by_user_id);
+        $this->assertDatabaseCount('users', 0);
     }
 
     public function test_two_businesses_have_distinct_memberships_for_one_representative(): void
@@ -329,33 +332,43 @@ class BusinessMembershipWorkflowTest extends TestCase
             'name' => 'Doanh nghiệp thứ hai', 'slug' => 'second-business', 'status' => 'pending',
             'submitted_by_user_id' => $business->submitted_by_user_id, 'business_chapter_id' => $business->business_chapter_id,
         ]);
+        $second->industries()->attach($this->payload()['industry_ids']);
         $second->addMedia(UploadedFile::fake()->create('don-2.pdf', 20, 'application/pdf'))->toMediaCollection('signed_membership_application');
         foreach ([$business, $second] as $record) {
             app(BusinessApprovalService::class)->approveForChapter($record, $association, $record->business_chapter_id);
             app(BusinessApprovalService::class)->receive($record, $chapterUser);
+            app(BusinessApprovalService::class)->ratify($record, $this->staff('membership_head'));
         }
         $this->assertNotSame($business->fresh()->membership_code, $second->fresh()->membership_code);
         $this->assertDatabaseCount('members', 1);
         $this->assertSame(2, Business::query()->representedBy($business->submittedBy)->where('status', 'approved')->count());
     }
 
-    public function test_changing_an_approved_profile_returns_to_review_and_preserves_its_membership_code(): void
+    public function test_profile_updates_preserve_the_published_membership_until_reviewed(): void
     {
-        [$business, $association, $chapterUser] = $this->workflow();
+        [$business, $office, $chapter] = $this->workflow();
         $payload = $this->payload();
         $business->update(Arr::only($payload, ['business_type', 'business_size', 'phone', 'email', 'address', 'province', 'summary']));
-        $business->industries()->sync($payload['industry_ids']);
-        app(BusinessApprovalService::class)->approveForChapter($business, $association, $business->business_chapter_id);
-        app(BusinessApprovalService::class)->receive($business, $chapterUser);
-        $code = $business->fresh()->membership_code;
+        app(BusinessApprovalService::class)->approveForChapter($business, $office, $business->business_chapter_id);
+        app(BusinessApprovalService::class)->receive($business, $chapter);
+        app(BusinessApprovalService::class)->ratify($business, $this->staff('membership_head'));
+        $business->refresh();
+        $code = $business->membership_code;
+        $original = $business->summary;
+        $industries = $business->industries->modelKeys();
         Filament::setCurrentPanel(Filament::getPanel('member'));
         $this->actingAs($business->submittedBy, 'web');
         Livewire::test(EditMyBusiness::class, ['record' => $business->id])
-            ->fillForm(['summary' => 'Nội dung cập nhật cần xét duyệt.'])->call('save')->assertHasNoFormErrors()->assertRedirect(route('account.dashboard'));
-        $this->assertSame('pending', $business->fresh()->status);
+            ->fillForm(['summary' => 'Nội dung cập nhật cần xét duyệt.'])->call('save')->assertHasNoFormErrors();
+        $this->assertSame('approved', $business->fresh()->status);
         $this->assertSame($code, $business->fresh()->membership_code);
-        $this->assertNull($business->fresh()->association_approved_at);
-        $this->get(route('account.dashboard'))->assertOk();
+        $this->assertSame($original, $business->fresh()->summary);
+        $this->assertSame($industries, $business->fresh()->industries->modelKeys());
+        $this->get(route('directory.index'))->assertSee($original)->assertDontSee('Nội dung cập nhật cần xét duyệt.');
+        app(BusinessProfileReviewService::class)->review($business->fresh(), $office, true);
+        $this->assertSame('Nội dung cập nhật cần xét duyệt.', $business->fresh()->summary);
+        $this->assertNull($business->fresh()->pending_profile);
+        $this->assertSame('approved', $business->fresh()->status);
     }
 
     public function test_staff_forms_reject_elevated_roles_and_require_chapter_assignments(): void
@@ -379,7 +392,7 @@ class BusinessMembershipWorkflowTest extends TestCase
 
         return [
             'name' => 'Công ty hồ sơ trực tiếp', 'tax_code' => 'DNT-DIRECT-001', 'business_type' => 'limited', 'business_size' => 'small',
-            'representative_name' => 'Đại diện kiểm thử', 'industry_ids' => [$industry->id], 'phone' => '0900000000', 'email' => 'company@example.test',
+            'business_chapter_id' => $this->chapter()->id, 'representative_name' => 'Đại diện kiểm thử', 'industry_ids' => [$industry->id], 'phone' => '0900000000', 'email' => 'company@example.test',
             'login_email' => 'representative@example.test', 'password' => 'membership-test-123', 'password_confirmation' => 'membership-test-123',
             'address' => 'Địa chỉ kiểm thử', 'province' => 'Bắc Ninh', 'summary' => 'Hồ sơ doanh nghiệp kiểm thử.',
             'membership_application' => UploadedFile::fake()->create('don-da-ky.pdf', 20, 'application/pdf'), 'confirm_information' => '1',
@@ -411,6 +424,7 @@ class BusinessMembershipWorkflowTest extends TestCase
             'name' => 'Doanh nghiệp kiểm thử quy trình', 'slug' => 'workflow-business', 'tax_code' => 'WORKFLOW-001', 'status' => 'pending',
             'submitted_by_user_id' => User::factory()->create()->id, 'representative_name' => 'Người đại diện', 'business_chapter_id' => $chapter->id,
         ]);
+        $business->industries()->attach($this->payload()['industry_ids']);
         $business->addMedia(UploadedFile::fake()->create('don-da-ky.pdf', 20, 'application/pdf'))->toMediaCollection('signed_membership_application');
 
         return [$business, $association, $chapterUser];

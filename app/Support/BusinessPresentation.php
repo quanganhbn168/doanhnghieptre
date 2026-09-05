@@ -16,7 +16,7 @@ class BusinessPresentation
     public static function statusColor(string $status): string
     {
         return match ($status) {
-            'approved' => 'success', 'chapter_pending' => 'info', 'pending' => 'warning', 'rejected' => 'danger', default => 'gray',
+            'approved' => 'success', 'chapter_pending', 'board_pending' => 'info', 'pending', 'changes_requested' => 'warning', 'rejected' => 'danger', default => 'gray',
         };
     }
 

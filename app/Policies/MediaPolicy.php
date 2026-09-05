@@ -10,7 +10,7 @@ class MediaPolicy
     public function viewAny(User $user): bool
     {
         if (Filament::getCurrentPanel()?->getId() === 'association') {
-            return $user->canManageAssociation();
+            return $user->canModerateContent();
         }
 
         return $user->canAccessPanel(Filament::getPanel('admin'));

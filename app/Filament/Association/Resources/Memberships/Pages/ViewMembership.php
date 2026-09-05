@@ -36,7 +36,7 @@ class ViewMembership extends ViewRecord
 
     protected function afterActionCalled(Action $action): void
     {
-        if (in_array($action->getName(), ['approve_association', 'receive_chapter', 'request_changes'], true)) {
+        if (in_array($action->getName(), ['approve_association', 'receive_chapter', 'request_changes', 'ratify_membership', 'reject_membership', 'approve_profile', 'request_profile_changes'], true)) {
             $this->getRecord()->refresh();
         }
     }

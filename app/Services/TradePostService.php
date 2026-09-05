@@ -43,7 +43,7 @@ class TradePostService
 
     public function moderate(TradePost $post, User $actor, string $decision, ?string $note = null): void
     {
-        abort_unless($actor->canManageAssociation(), 403);
+        abort_unless($actor->canModerateContent(), 403);
         DB::transaction(function () use ($post, $actor, $decision, $note): void {
             // Lock the business first, matching member submission lock order.
             $business = Business::query()->lockForUpdate()->find($post->business_id);

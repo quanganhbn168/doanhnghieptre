@@ -3,13 +3,23 @@
 use App\Http\Controllers\Account\BusinessApplicationController;
 use App\Http\Controllers\Account\DashboardController;
 use App\Http\Controllers\Account\DownloadBusinessMembershipApplicationController;
+use App\Http\Controllers\Account\MembershipTrackingController;
 use App\Http\Controllers\Auth\AuthController;
 use App\Http\Controllers\Frontend;
+use App\Http\Middleware\PrivateMembershipResponse;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/dang-ky-hoi-vien', [BusinessApplicationController::class, 'create'])->name('membership.create');
 Route::post('/dang-ky-hoi-vien', [BusinessApplicationController::class, 'store'])->middleware('throttle:frontend-forms')->name('membership.store');
 Route::redirect('/register', '/dang-ky-hoi-vien')->name('register');
+Route::view('/tra-cuu-ho-so', 'account.membership-lookup')->name('membership.lookup');
+Route::post('/tra-cuu-ho-so', [MembershipTrackingController::class, 'requestLink'])->middleware('throttle:frontend-forms')->name('membership.lookup.send');
+Route::middleware(['signed', PrivateMembershipResponse::class])->prefix('ho-so-gia-nhap/{business}')->group(function (): void {
+    Route::get('/', [MembershipTrackingController::class, 'show'])->name('membership.track');
+    Route::get('/bo-sung', [BusinessApplicationController::class, 'edit'])->name('membership.track.edit');
+    Route::patch('/bo-sung', [BusinessApplicationController::class, 'update'])->middleware('throttle:frontend-forms')->name('membership.track.update');
+    Route::get('/don-gia-nhap', [MembershipTrackingController::class, 'document'])->name('membership.track.document');
+});
 
 Route::middleware(['auth', 'account.approved'])->prefix('tai-khoan')->as('account.')->group(function (): void {
     Route::get('/', DashboardController::class)->name('dashboard');

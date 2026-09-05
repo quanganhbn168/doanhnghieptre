@@ -46,7 +46,7 @@ class MyBusinessResource extends Resource
 
     public static function canEdit($record): bool
     {
-        return in_array($record->status, ['approved', 'draft', 'rejected'], true) && static::getEloquentQuery()->whereKey($record->id)->exists();
+        return $record->status === 'approved' && static::getEloquentQuery()->whereKey($record->id)->exists();
     }
 
     public static function form(Schema $schema): Schema

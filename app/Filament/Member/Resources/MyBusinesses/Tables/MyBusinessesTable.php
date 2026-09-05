@@ -23,6 +23,7 @@ class MyBusinessesTable
                     'approved' => 'success', 'pending' => 'warning', 'rejected' => 'danger', default => 'gray',
                 }),
                 TextColumn::make('updated_at')->label('Cập nhật')->since()->sortable(),
+                TextColumn::make('profile_review')->label('Bản chỉnh sửa')->state(fn (Business $record) => $record->pending_profile ? ($record->profile_review_note ? 'Cần chỉnh sửa' : 'Chờ Văn phòng kiểm tra') : 'Không có')->description(fn (Business $record) => $record->profile_review_note)->wrap(),
             ])
             ->defaultSort('updated_at', 'desc')
             ->recordActions([

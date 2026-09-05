@@ -8,15 +8,14 @@ use App\Models\Business;
 use App\Models\BusinessCategory;
 use App\Models\BusinessChapter;
 use App\Models\Industry;
-use App\Models\User;
+use App\Services\MembershipNotificationService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\URL;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\Rules\File;
-use Illuminate\Validation\Rules\Password;
 use Illuminate\View\View;
 
 class BusinessApplicationController extends Controller
@@ -46,27 +45,21 @@ class BusinessApplicationController extends Controller
         $data = $this->validated($request);
         $user = $request->user();
 
-        $business = DB::transaction(function () use ($data, &$user, $request, $storeSignedMembershipApplication): Business {
-            if (! $user) {
-                $user = User::query()->create([
-                    'name' => $data['representative_name'],
-                    'email' => $data['login_email'],
-                    'phone' => $data['phone'],
-                    'password' => $data['password'],
-                    'is_active' => true,
-                    'approval_status' => 'approved',
-                ]);
-            }
+        $business = DB::transaction(function () use ($data, $user, $request, $storeSignedMembershipApplication): Business {
             $business = Business::query()->create([
                 ...$this->payload($data),
                 'slug' => $this->availableSlug($data['name']),
-                'submitted_by_user_id' => $user->id,
+                'submitted_by_user_id' => $user?->id,
                 'status' => 'draft',
             ]);
 
+            $business->forceFill([
+                'application_code' => 'HS-DNT-'.Str::upper((string) Str::ulid()),
+                'application_email' => $user?->email ?: $data['login_email'],
+            ])->save();
             $this->syncIndustries($business, $data['industry_ids']);
 
-            if ($user->member) {
+            if ($user?->member) {
                 $business->members()->syncWithoutDetaching([
                     $user->member->id => [
                         'role' => 'representative',
@@ -80,17 +73,15 @@ class BusinessApplicationController extends Controller
 
             $this->syncLogo($request, $business);
             $storeSignedMembershipApplication($business, $request->file('membership_application'));
-            $business->transitionTo('pending', $user->id, 'Doanh nghiệp nộp đơn đăng ký hội viên trực tiếp.');
+            $business->transitionTo('pending', $user?->id, 'Doanh nghiệp nộp đơn đăng ký hội viên trực tiếp.');
+
+            app(MembershipNotificationService::class)->updated($business);
 
             return $business;
         });
 
-        if (! Auth::guard('web')->check()) {
-            Auth::guard('web')->login($user);
-            $request->session()->regenerate();
-        }
-
-        return to_route('account.dashboard')->with('success', 'Hồ sơ doanh nghiệp đã được gửi. Hội sẽ kiểm tra và phản hồi trên trang này.');
+        return redirect(URL::temporarySignedRoute('membership.track', now()->addDays(30), ['business' => $business->id]))
+            ->with('success', 'Đã nhận đơn đăng ký. Tài khoản hội viên sẽ được cấp sau khi Trưởng ban Hội viên chuẩn y.');
     }
 
     public function edit(Request $request, Business $business): View
@@ -109,6 +100,8 @@ class BusinessApplicationController extends Controller
             'selectedIndustryIds' => collect($request->old('industry_ids', $business->industries->sortByDesc('pivot.is_primary')->values()->modelKeys()))->map(static fn ($id): string => (string) $id)->all(),
             'legacyIndustryNames' => $business->industries->filter(fn (Industry $industry) => ! $industry->is_member_group || ! $industry->is_active)->pluck('name')->join(', '),
             'mode' => 'edit',
+            'formAction' => $request->routeIs('membership.track*') ? $request->fullUrl() : route('account.businesses.update', $business),
+            'documentUrl' => $request->routeIs('membership.track*') ? URL::temporarySignedRoute('membership.track.document', now()->addMinutes(30), ['business' => $business->id]) : route('business.membership-application.download', $business),
         ]);
     }
 
@@ -129,10 +122,11 @@ class BusinessApplicationController extends Controller
             if ($request->hasFile('membership_application')) {
                 $storeSignedMembershipApplication($business, $request->file('membership_application'));
             }
-            $business->transitionTo('pending', $request->user()->id, 'Hồ sơ được bổ sung và gửi lại để Hội duyệt từ đầu.');
+            $business->transitionTo('pending', $request->user()?->id, 'Hồ sơ được bổ sung và gửi lại để Văn phòng kiểm tra từ đầu.');
+            app(MembershipNotificationService::class)->updated($business);
         });
 
-        return to_route('account.dashboard')->with('success', 'Hồ sơ đã được gửi lại để Hội duyệt.');
+        return redirect(URL::temporarySignedRoute('membership.track', now()->addDays(30), ['business' => $business->id]))->with('success', 'Hồ sơ đã được gửi lại để Văn phòng kiểm tra.');
     }
 
     private function categories()
@@ -164,10 +158,9 @@ class BusinessApplicationController extends Controller
 
         return $request->validate([
             'representative_name' => ['required', 'string', 'max:255'],
-            'business_chapter_id' => ['nullable', Rule::exists('business_chapters', 'id')->where('is_active', true)],
-            ...($request->user() ? [] : [
-                'login_email' => ['required', 'email', 'max:255', Rule::unique('users', 'email')],
-                'password' => ['required', 'string', 'max:255', 'confirmed', Password::min(8)],
+            'business_chapter_id' => ['required', Rule::exists('business_chapters', 'id')->where('is_active', true)],
+            ...($request->user() || $business ? [] : [
+                'login_email' => ['required', 'email', 'max:255'],
             ]),
             'name' => ['required', 'string', 'max:255'],
             'legal_name' => ['nullable', 'string', 'max:255'],
@@ -193,7 +186,7 @@ class BusinessApplicationController extends Controller
             ],
             'confirm_information' => ['accepted'],
         ], [
-            'login_email.unique' => 'Email này đã có thông tin đăng nhập. Vui lòng đăng nhập để nộp hồ sơ bằng email này.',
+            'business_chapter_id.required' => 'Anh/chị cần chọn Chi hội đăng ký tham gia.',
             'confirm_information.accepted' => 'Anh/chị cần xác nhận thông tin đã khai là chính xác.',
             'industry_ids.required' => 'Anh/chị cần chọn ít nhất một khối ngành nghề.',
             'industry_ids.min' => 'Anh/chị cần chọn ít nhất một khối ngành nghề.',
@@ -253,7 +246,11 @@ class BusinessApplicationController extends Controller
 
     private function ensureCanManage(Request $request, Business $business): void
     {
+        if ($request->routeIs('membership.track*') && $request->hasValidSignature()) {
+            return;
+        }
         $user = $request->user();
+        abort_unless($user, 403);
         $isSubmitter = $business->submitted_by_user_id === $user->id;
         $isLinkedMember = $user->member
             && $business->members()->whereKey($user->member->id)->wherePivot('status', 'active')->exists();
@@ -263,7 +260,7 @@ class BusinessApplicationController extends Controller
 
     private function ensureEditable(Business $business): void
     {
-        abort_unless(in_array($business->status, ['draft', 'rejected'], true), 403, 'Hồ sơ đang được Hội xử lý nên chưa thể thay đổi.');
+        abort_unless(in_array($business->status, ['draft', 'changes_requested'], true), 403, 'Hồ sơ đang được Hội xử lý nên chưa thể thay đổi.');
     }
 
     private function availableSlug(string $name): string

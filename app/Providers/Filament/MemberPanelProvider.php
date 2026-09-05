@@ -2,6 +2,7 @@
 
 namespace App\Providers\Filament;
 
+use App\Filament\Member\Pages\EditProfile;
 use App\Filament\Member\Pages\MemberOverview;
 use App\Models\SiteAsset;
 use Filament\Http\Middleware\Authenticate;
@@ -28,6 +29,8 @@ class MemberPanelProvider extends PanelProvider
             ->id('member')
             ->path('thanh-vien')
             ->login()
+            ->profile(EditProfile::class, isSimple: false)
+            ->emailChangeVerification()
             ->authGuard('web')->databaseTransactions()
             ->brandName('Cổng Hội viên DNT Bắc Ninh')
             ->brandLogo(fn (): ?string => SiteAsset::current()->getFirstMediaUrl('logo') ?: null)

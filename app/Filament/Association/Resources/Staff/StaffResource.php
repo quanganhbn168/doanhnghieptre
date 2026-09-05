@@ -17,7 +17,7 @@ use UnitEnum;
 
 class StaffResource extends Resource
 {
-    public const ROLES = ['association_manager' => 'Cán bộ Hội', 'chapter_manager' => 'Cán bộ Chi hội'];
+    public const ROLES = ['association_manager' => 'Admin Văn phòng Hội', 'chapter_manager' => 'Chi hội trưởng', 'membership_head' => 'Trưởng ban Hội viên', 'communications_manager' => 'Ban Truyền thông'];
 
     protected static ?string $model = User::class;
 

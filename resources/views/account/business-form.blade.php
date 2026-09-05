@@ -19,10 +19,11 @@
             <div class="dnt-application-page__heading">
                 <a class="dnt-text-link" href="{{ auth()->check() ? route('account.dashboard') : route('home') }}"><i class="fa-solid fa-arrow-left" aria-hidden="true"></i> {{ auth()->check() ? 'Theo dõi hồ sơ' : 'Trang chủ' }}</a>
                 <h1>{{ $mode === 'edit' ? 'Bổ sung hồ sơ hội viên' : 'Đăng ký hội viên' }}</h1>
-                <p>Mỗi hội viên là một doanh nghiệp. Gửi thông tin và đơn gia nhập Hội tại đây; Hội xét duyệt, sau đó Chi hội tiếp nhận doanh nghiệp.</p>
+                <p>Mỗi hội viên là một doanh nghiệp. Gửi thông tin và đơn gia nhập Hội tại đây; Văn phòng kiểm tra, Chi hội thẩm định và Trưởng ban Hội viên chuẩn y.</p>
+                @if($mode === 'create')<a class="dnt-text-link" href="{{ route('membership.lookup') }}">Đã nộp đơn? Tra cứu hồ sơ</a>@endif
             </div>
 
-            <form class="dnt-business-application" method="POST" action="{{ $mode === 'edit' ? route('account.businesses.update', $business) : route('membership.store') }}" enctype="multipart/form-data">
+            <form class="dnt-business-application" method="POST" action="{{ $formAction ?? ($mode === 'edit' ? route('account.businesses.update', $business) : route('membership.store')) }}" enctype="multipart/form-data">
                 @csrf
                 @if($mode === 'edit') @method('PATCH') @endif
 
@@ -67,7 +68,7 @@
                                 <p id="industry-error" class="ui-error">{{ $errors->first('industry_ids*') }}</p>
                             @endif
                         </div>
-                        <label class="dnt-business-application__full"><span>Chi hội mong muốn tham gia</span><select class="ui-select" name="business_chapter_id"><option value="">Để Hội phân công Chi hội phù hợp</option>@foreach($chapters as $chapter)<option value="{{ $chapter->id }}" @selected((string) old('business_chapter_id', $business->business_chapter_id) === (string) $chapter->id)>{{ $chapter->name }}</option>@endforeach</select><small>Hội xác nhận Chi hội tiếp nhận khi duyệt hồ sơ.</small></label>
+                        <label class="dnt-business-application__full"><span>Chi hội đăng ký <b>*</b></span><select class="ui-select" name="business_chapter_id" required><option value="">Chọn Chi hội đăng ký</option>@foreach($chapters as $chapter)<option value="{{ $chapter->id }}" @selected((string) old('business_chapter_id', $business->business_chapter_id) === (string) $chapter->id)>{{ $chapter->name }}</option>@endforeach</select><small>Văn phòng kiểm tra và chuyển hồ sơ đến Chi hội thẩm định.</small></label>
                     </div>
                 </section>
 
@@ -102,11 +103,11 @@
                     <div class="dnt-business-application__grid">
                         <label><span>Họ và tên người đại diện <b>*</b></span><input class="ui-input" name="representative_name" value="{{ old('representative_name', $business->representative_name ?: auth()->user()?->name) }}" required autocomplete="name" maxlength="255"></label>
                         <label><span>Chức danh</span><input class="ui-input" name="job_title" value="{{ old('job_title', $business->representative_job_title) }}" placeholder="Ví dụ: Giám đốc điều hành"></label>
-                        @guest
-                            <label class="dnt-business-application__full"><span>Email đăng nhập theo dõi hồ sơ <b>*</b></span><input class="ui-input" name="login_email" type="email" value="{{ old('login_email') }}" required autocomplete="username"><small>Đã có thông tin đăng nhập? <a class="dnt-text-link" href="{{ route('login') }}">Đăng nhập để dùng lại</a>.</small></label>
-                            <label><span>Mật khẩu <b>*</b></span><input class="ui-input" name="password" type="password" required minlength="8" autocomplete="new-password"><small>Tối thiểu 8 ký tự. Dùng để theo dõi và bổ sung hồ sơ ngay sau khi gửi.</small></label>
-                            <label><span>Nhập lại mật khẩu <b>*</b></span><input class="ui-input" name="password_confirmation" type="password" required minlength="8" autocomplete="new-password"></label>
-                        @endguest
+                        @if($mode === 'create' && ! auth()->check())
+                            <label class="dnt-business-application__full"><span>Email người đại diện <b>*</b></span><input class="ui-input" name="login_email" type="email" value="{{ old('login_email') }}" required autocomplete="email"><small>Nhận tiến độ hồ sơ và liên kết thiết lập tài khoản sau khi được chuẩn y.</small></label>
+                        @elseif($mode === 'edit')
+                            <p class="dnt-business-application__full">Email nhận thông báo: <strong>{{ $business->application_email ?: $business->submittedBy?->email }}</strong></p>
+                        @endif
                     </div>
                 </section>
 
@@ -131,7 +132,7 @@
                             <small id="membership-application-help">Chỉ nhận PDF, DOC hoặc DOCX; tối đa 10 MB.</small>
                             <div id="membership-application-error" class="ui-error" role="alert" @if(! $errors->has('membership_application')) hidden @endif>{{ $errors->first('membership_application') }}</div>
                             @if($signedMembershipApplication)
-                                <p>Đã nhận tệp <a class="dnt-text-link" href="{{ route('business.membership-application.download', $business) }}">{{ $signedMembershipApplication->file_name }} <i class="fa-solid fa-download" aria-hidden="true"></i></a>. Chỉ tải lại khi cần thay thế.</p>
+                                <p>Đã nhận tệp <a class="dnt-text-link" href="{{ $documentUrl ?? route('business.membership-application.download', $business) }}">{{ $signedMembershipApplication->file_name }} <i class="fa-solid fa-download" aria-hidden="true"></i></a>. Chỉ tải lại khi cần thay thế.</p>
                             @endif
                         </div>
                     </div>
